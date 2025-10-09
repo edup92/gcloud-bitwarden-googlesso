@@ -1,0 +1,554 @@
+---
+- name: bitwarden-tailscale
+  hosts: localhost
+  connection: local
+  gather_facts: true
+  become: true
+
+  tasks:
+    - name: Installations
+      block:
+        - name: Update APT cache
+          apt:
+            update_cache: true
+        - name: Basic Packages
+          apt:
+            name:
+              - software-properties-common
+              - gnupg
+              - curl
+              - ca-certificates
+              - nano
+            state: present
+        - name: Create Docker keyrings directory
+          file:
+            path: /etc/apt/keyrings
+            state: directory
+            mode: "0755"
+        - name: Download Docker GPG key
+          get_url:
+            url: https://download.docker.com/linux/ubuntu/gpg
+            dest: /etc/apt/keyrings/docker.asc
+            mode: "0644"
+        - name: Set permissions for Docker GPG key
+          file:
+            path: /etc/apt/keyrings/docker.asc
+            mode: "0644"
+        - name: Add Docker repository to Apt sources
+          copy:
+            dest: /etc/apt/sources.list.d/docker.list
+            content: |
+              deb [arch=amd64 signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu {{ ansible_lsb.codename | default('noble') }} stable
+        - name: Download Tailscale GPG key (modern method)
+          get_url:
+            url: "https://pkgs.tailscale.com/stable/ubuntu/{{ ansible_lsb.codename }}.noarmor.gpg"
+            dest: /usr/share/keyrings/tailscale-archive-keyring.gpg
+            mode: "0644"
+        - name: Download Tailscale apt source list
+          get_url:
+            url: "https://pkgs.tailscale.com/stable/ubuntu/{{ ansible_lsb.codename }}.tailscale-keyring.list"
+            dest: /etc/apt/sources.list.d/tailscale.list
+            mode: "0644"
+        - name: Update apt cache
+          apt:
+            update_cache: true
+        - name: Install Docker and Tailscale
+          apt:
+            name:
+              - docker-ce
+              - docker-ce-cli
+              - containerd.io
+              - docker-buildx-plugin
+              - docker-compose-plugin
+              - tailscale
+              - unzip
+            state: present
+            update_cache: true
+
+    - name: Create bitwarden usser and directories
+      block:
+        - name: Create bitwarden user
+          user:
+            name: bitwarden
+            shell: /bin/bash
+            home: /opt/bitwarden
+            create_home: no
+            groups: docker
+            append: yes
+            state: present
+          register: bitwarden_user
+        - name: Create bitwarden directories
+          file:
+            path: "{{ item.path }}"
+            state: directory
+            owner: bitwarden
+            group: bitwarden
+            mode: "{{ item.mode }}"
+          loop:
+            - { path: "/opt/bitwarden", mode: "0700" }
+            - { path: "/opt/bitwarden/bwdata/docker", mode: "0755" }
+            - { path: "/opt/bitwarden/bwdata/core", mode: "0755" }
+            - { path: "/opt/bitwarden/bwdata/identity", mode: "0755" }
+            - { path: "/opt/bitwarden/bwdata/web", mode: "0755" }
+            - { path: "/opt/bitwarden/bwdata/ssl", mode: "0755" }
+            - { path: "/opt/bitwarden/bwdata/env", mode: "0755" }
+            - { path: "/opt/bitwarden/bwdata/mssql", mode: "0755" }
+            - { path: "/opt/bitwarden/bwdata/attachments", mode: "0755" }
+            - { path: "/opt/bitwarden/bwdata/nginx", mode: "0755" }
+
+    - name: Configure Tailscale
+      block:
+        - name: Start and enable Tailscale service
+          systemd:
+            name: tailscaled
+            state: started
+            enabled: yes
+        - name: Connect to Tailscale network
+          command: tailscale up --authkey={{ tailscale_key }}
+          register: tailscale_up
+          changed_when: "'Success' in tailscale_up.stderr or tailscale_up.rc == 0"
+          failed_when: tailscale_up.rc != 0 and 'already logged in' not in tailscale_up.stderr
+        - name: Get Tailscale status
+          command: tailscale status --json
+          register: tailscale_status
+          changed_when: false
+        - name: Set Tailscale URL as fact
+          set_fact:
+            tailscale_url: >-
+              {{ (tailscale_status.stdout | from_json).Self.DNSName | default('') }}
+        - name: Enable HTTPS certificates for Tailscale
+          shell: |
+            cd /opt/bitwarden/bwdata/ssl/
+            tailscale cert {{ tailscale_url | regex_replace('\.$', '') }}
+          register: tailscale_cert
+          changed_when: tailscale_cert.rc == 0
+
+    - name: Create bitwarden config
+      block:
+        - name: Generate random password for PFX certificate
+          set_fact:
+            pfx_password: "{{ lookup('password', '/dev/null length=32 chars=ascii_letters,digits') }}"
+        - name: Generate Bitwarden Identity certificate
+          shell: |
+            cd /opt/bitwarden/bwdata/identity
+            openssl req -x509 -newkey rsa:2048 -keyout identity.key -out identity.crt -days 3650 -nodes -subj "/CN=Bitwarden Identity"
+          register: bitwarden_identity_cert
+          changed_when: bitwarden_identity_cert.rc == 0
+        - name: Generate PKCS#12 certificate bundle for Identity
+          shell: |
+            cd /opt/bitwarden/bwdata/identity
+            openssl pkcs12 -export \
+              -out identity.pfx \
+              -inkey identity.key \
+              -in identity.crt \
+              -certfile identity.crt \
+              -password pass:{{ pfx_password }}
+          register: bitwarden_identity_pfx
+          changed_when: bitwarden_identity_pfx.rc == 0
+        - name: Set ownership and permissions for identity certificates
+          file:
+            path: "{{ item }}"
+            owner: bitwarden
+            group: bitwarden
+            mode: "0600"
+          loop:
+            - /opt/bitwarden/bwdata/identity/identity.key
+            - /opt/bitwarden/bwdata/identity/identity.crt
+            - /opt/bitwarden/bwdata/identity/identity.pfx
+        - name: Generate Bitwarden config.yml
+          copy:
+            dest: "/opt/bitwarden/bwdata/config.yml"
+            content: |
+              version: "2025.9.2"
+              url: https://{{ tailscale_url | regex_replace('\.$', '') }}
+              ssl:
+                managed: false
+                certificate_path: /opt/bitwarden/bwdata/ssl/{{ tailscale_url | regex_replace('\.$', '') }}.crt
+                key_path: /opt/bitwarden/bwdata/ssl/{{ tailscale_url | regex_replace('\.$', '') }}.key
+              database:
+                name: vault
+              installation_id: {{ bw_installation_id }}
+              installation_key: {{ bw_installation_key }}
+              ports:
+                http: 80
+                https: 443
+            owner: bitwarden
+            group: bitwarden
+            mode: "0600"
+        - name: Generate Bitwarden mssql.env
+          copy:
+            dest: "/opt/bitwarden/bwdata/env/mssql.env"
+            content: |
+              ACCEPT_EULA=Y
+              MSSQL_PID=Express
+              SA_PASSWORD={{ bw_db_password }}
+              DATABASE=vault
+            owner: bitwarden
+            group: bitwarden
+            mode: "0600"
+        - name: Generate Bitwarden uid.env
+          copy:
+            dest: "/opt/bitwarden/bwdata/env/uid.env"
+            content: |
+              LOCAL_UID={{ bitwarden_user.uid }}
+              LOCAL_GID={{ bitwarden_user.group }}
+            owner: bitwarden
+            group: bitwarden
+            mode: "0600"
+        - name: Generate nginx default.conf
+          copy:
+            dest: "/opt/bitwarden/bwdata/nginx/default.conf"
+            content: |
+              server {
+                listen 8080 default_server;
+                listen [::]:8080 default_server;
+                server_name {{ tailscale_url | regex_replace('\.$', '') }};
+
+                return 301 https://{{ tailscale_url | regex_replace('\.$', '') }}$request_uri;
+              }
+
+              server {
+                listen 8443 ssl http2;
+                listen [::]:8443 ssl http2;
+                server_name {{ tailscale_url | regex_replace('\.$', '') }};
+
+                ssl_certificate /etc/ssl/{{ tailscale_url | regex_replace('\.$', '') }}.crt;
+                ssl_certificate_key /etc/ssl/{{ tailscale_url | regex_replace('\.$', '') }}.key;
+                ssl_session_timeout 30m;
+                ssl_session_cache shared:SSL:20m;
+                ssl_session_tickets off;
+
+                ssl_protocols TLSv1.2;
+                ssl_ciphers "ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-SHA384:ECDHE-RSA-AES256-SHA384:ECDHE-ECDSA-AES128-SHA256:ECDHE-RSA-AES128-SHA256";
+                # Enables server-side protection from BEAST attacks
+                ssl_prefer_server_ciphers on;
+
+                # OCSP Stapling ---
+                # Fetch OCSP records from URL in ssl_certificate and cache them
+                ssl_stapling on;
+                ssl_stapling_verify on;
+
+                # Verify chain of trust of OCSP response using Root CA and Intermediate certs
+                ssl_trusted_certificate /etc/ssl/{{ tailscale_url | regex_replace('\.$', '') }}.crt;
+                resolver 1.1.1.1 1.0.0.1 9.9.9.9 149.112.112.112 valid=300s;
+
+                include /etc/nginx/security-headers-ssl.conf;
+                include /etc/nginx/security-headers.conf;
+
+                location / {
+                  proxy_pass http://web:5000/;
+                  include /etc/nginx/security-headers-ssl.conf;
+                  include /etc/nginx/security-headers.conf;
+                  add_header Content-Security-Policy "default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://haveibeenpwned.com; child-src 'self' https://*.duosecurity.com https://*.duofederal.com; frame-src 'self' https://*.duosecurity.com https://*.duofederal.com; connect-src 'self' wss://{{ tailscale_url | regex_replace('\.$', '') }} https://api.pwnedpasswords.com https://api.2fa.directory; object-src 'self' blob:;";
+                  add_header X-Frame-Options SAMEORIGIN;
+                  add_header X-Robots-Tag "noindex, nofollow";
+                }
+
+                location /alive {
+                  return 200 'alive';
+                  add_header Content-Type text/plain;
+                }
+
+                location = /app-id.json {
+                  proxy_pass http://web:5000/app-id.json;
+                  include /etc/nginx/security-headers-ssl.conf;
+                  include /etc/nginx/security-headers.conf;
+                  proxy_hide_header Content-Type;
+                  add_header Content-Type $fido_content_type;
+                }
+
+                location = /duo-connector.html {
+                  proxy_pass http://web:5000/duo-connector.html;
+                }
+
+                location = /webauthn-connector.html {
+                  proxy_pass http://web:5000/webauthn-connector.html;
+                }
+
+                location = /webauthn-fallback-connector.html {
+                  proxy_pass http://web:5000/webauthn-fallback-connector.html;
+                }
+
+                location = /sso-connector.html {
+                  proxy_pass http://web:5000/sso-connector.html;
+                }
+
+                location /attachments/ {
+                  proxy_pass http://attachments:5000/;
+                }
+
+                location /api/ {
+                  proxy_pass http://api:5000/;
+                }
+
+                location /icons/ {
+                  proxy_pass http://icons:5000/;
+                }
+
+                location /notifications/ {
+                  proxy_pass http://notifications:5000/;
+                }
+
+                location /notifications/hub {
+                  proxy_pass http://notifications:5000/hub;
+                  proxy_set_header Upgrade $http_upgrade;
+                  proxy_set_header Connection $http_connection;
+                }
+
+                location /notifications/anonymous-hub {
+                  proxy_pass http://notifications:5000/anonymous-hub;
+                  proxy_set_header Upgrade $http_upgrade;
+                  proxy_set_header Connection $http_connection;
+                }
+
+                location /events/ {
+                  proxy_pass http://events:5000/;
+                }
+
+                location /sso {
+                  proxy_pass http://sso:5000;
+                  include /etc/nginx/security-headers-ssl.conf;
+                  include /etc/nginx/security-headers.conf;
+                  add_header X-Frame-Options SAMEORIGIN;
+                }
+
+                location /identity {
+                  proxy_pass http://identity:5000;
+                  include /etc/nginx/security-headers-ssl.conf;
+                  include /etc/nginx/security-headers.conf;
+                  add_header X-Frame-Options SAMEORIGIN;
+                }
+
+                location /admin {
+                  proxy_pass http://admin:5000;
+                  include /etc/nginx/security-headers-ssl.conf;
+                  include /etc/nginx/security-headers.conf;
+                  add_header X-Frame-Options SAMEORIGIN;
+                }
+
+              }
+            owner: bitwarden
+            group: bitwarden
+            mode: "0644"
+
+        - name: Generate Bitwarden global.env
+          copy:
+            dest: "/opt/bitwarden/bwdata/env/global.env"
+            content: |
+              ASPNETCORE_ENVIRONMENT=Production
+              globalSettings__selfHosted=true
+              globalSettings__baseServiceUri__vault=https://{{ tailscale_url | regex_replace('\.$', '') }}
+              globalSettings__sqlServer__connectionString=Data Source=tcp:mssql,1433;Initial Catalog=vault;Persist Security Info=False;User ID=sa;Password={{ bw_db_password }};MultipleActiveResultSets=False;Connect Timeout=30;Encrypt=True;TrustServerCertificate=True
+              globalSettings__identityServer__certificatePath=/etc/bitwarden/identity/identity.pfx
+              globalSettings__identityServer__certificatePassword={{ pfx_password }}
+              globalSettings__installation__id={{ bw_installation_id }}
+              globalSettings__installation__key={{ bw_installation_key }}
+              globalSettings__mail__smtp__host={{ bw_smtp__host }}
+              globalSettings__mail__smtp__port={{ bw_smtp__port }}
+              globalSettings__mail__smtp__ssl={{ bw_smtp__ssl }}
+              globalSettings__mail__smtp__username={{ bw_smtp__username }}
+              globalSettings__mail__smtp__password={{ bw_smtp__password }}
+              globalSettings__enableUserRegistration=true
+            owner: bitwarden
+            group: bitwarden
+            mode: "0600"
+        - name: Generate docker-compose.yml
+          copy:
+            dest: "/opt/bitwarden/bwdata/docker/docker-compose.yml"
+            content: |
+              services:
+                mssql:
+                  image: ghcr.io/bitwarden/mssql:latest
+                  container_name: bitwarden-mssql
+                  restart: always
+                  stop_grace_period: 60s
+                  volumes:
+                    - ../mssql/data:/var/opt/mssql/data
+                    - ../logs/mssql:/var/opt/mssql/log
+                    - ../mssql/backups:/etc/bitwarden/mssql/backups
+                  env_file:
+                    - ../env/mssql.env
+                    - ../env/uid.env
+
+                web:
+                  image: ghcr.io/bitwarden/web:latest
+                  container_name: bitwarden-web
+                  restart: always
+                  volumes:
+                    - ../web:/etc/bitwarden/web
+                  env_file:
+                    - ../env/global.env
+                    - ../env/uid.env
+
+                attachments:
+                  image: ghcr.io/bitwarden/attachments:latest
+                  container_name: bitwarden-attachments
+                  restart: always
+                  volumes:
+                    - ../attachments:/etc/bitwarden/core/attachments
+                  env_file:
+                    - ../env/global.env
+                    - ../env/uid.env
+
+                api:
+                  image: ghcr.io/bitwarden/api:latest
+                  container_name: bitwarden-api
+                  restart: always
+                  volumes:
+                    - ../core:/etc/bitwarden/core
+                    - ../ca-certificates:/etc/bitwarden/ca-certificates
+                    - ../logs/api:/etc/bitwarden/logs
+                  env_file:
+                    - ../env/global.env
+                    - ../env/uid.env
+                  networks:
+                    - default
+                    - public
+
+                identity:
+                  image: ghcr.io/bitwarden/identity:latest
+                  container_name: bitwarden-identity
+                  restart: always
+                  volumes:
+                    - ../identity:/etc/bitwarden/identity
+                    - ../core:/etc/bitwarden/core
+                    - ../ca-certificates:/etc/bitwarden/ca-certificates
+                    - ../logs/identity:/etc/bitwarden/logs
+                  env_file:
+                    - ../env/global.env
+                    - ../env/uid.env
+                  networks:
+                    - default
+                    - public
+
+                sso:
+                  image: ghcr.io/bitwarden/sso:latest
+                  container_name: bitwarden-sso
+                  restart: always
+                  volumes:
+                    - ../identity:/etc/bitwarden/identity
+                    - ../core:/etc/bitwarden/core
+                    - ../ca-certificates:/etc/bitwarden/ca-certificates
+                    - ../logs/sso:/etc/bitwarden/logs
+                  env_file:
+                    - ../env/global.env
+                    - ../env/uid.env
+                  networks:
+                    - default
+                    - public
+
+                admin:
+                  image: ghcr.io/bitwarden/admin:latest
+                  container_name: bitwarden-admin
+                  restart: always
+                  depends_on:
+                    - mssql
+                  volumes:
+                    - ../core:/etc/bitwarden/core
+                    - ../ca-certificates:/etc/bitwarden/ca-certificates
+                    - ../logs/admin:/etc/bitwarden/logs
+                  env_file:
+                    - ../env/global.env
+                    - ../env/uid.env
+                  networks:
+                    - default
+                    - public
+
+                icons:
+                  image: ghcr.io/bitwarden/icons:latest
+                  container_name: bitwarden-icons
+                  restart: always
+                  volumes:
+                    - ../ca-certificates:/etc/bitwarden/ca-certificates
+                    - ../logs/icons:/etc/bitwarden/logs
+                  env_file:
+                    - ../env/global.env
+                    - ../env/uid.env
+                  networks:
+                    - default
+                    - public
+
+                notifications:
+                  image: ghcr.io/bitwarden/notifications:latest
+                  container_name: bitwarden-notifications
+                  restart: always
+                  volumes:
+                    - ../ca-certificates:/etc/bitwarden/ca-certificates
+                    - ../logs/notifications:/etc/bitwarden/logs
+                  env_file:
+                    - ../env/global.env
+                    - ../env/uid.env
+                  networks:
+                    - default
+                    - public
+
+                events:
+                  image: ghcr.io/bitwarden/events:latest
+                  container_name: bitwarden-events
+                  restart: always
+                  volumes:
+                    - ../ca-certificates:/etc/bitwarden/ca-certificates
+                    - ../logs/events:/etc/bitwarden/logs
+                  env_file:
+                    - ../env/global.env
+                    - ../env/uid.env
+                  networks:
+                    - default
+                    - public
+
+                nginx:
+                  image: ghcr.io/bitwarden/nginx:latest
+                  container_name: bitwarden-nginx
+                  restart: always
+                  depends_on:
+                    - web
+                    - admin
+                    - api
+                    - identity
+                  ports:
+                    - '80:8080'
+                    - '443:8443'
+                  volumes:
+                    - ../nginx:/etc/bitwarden/nginx
+                    - ../letsencrypt:/etc/letsencrypt
+                    - ../ssl:/etc/ssl
+                    - ../logs/nginx:/var/log/nginx
+                  env_file:
+                    - ../env/uid.env
+                  networks:
+                    - default
+                    - public
+
+              networks:
+                default:
+                  internal: true
+                public:
+                  internal: false
+            owner: bitwarden
+            group: bitwarden
+            mode: "0644"
+        - name: Create systemd service for Bitwarden
+          copy:
+            dest: "/etc/systemd/system/bitwarden.service"
+            content: |
+              [Unit]
+              Description=Bitwarden Docker Compose
+              Requires=docker.service
+              After=docker.service
+
+              [Service]
+              Type=oneshot
+              RemainAfterExit=yes
+              ExecStart=/usr/bin/sudo -u bitwarden bash -c 'cd /opt/bitwarden/bwdata/docker && docker compose up -d'
+              ExecStop=/usr/bin/sudo -u bitwarden bash -c 'cd /opt/bitwarden/bwdata/docker && docker compose down'
+              TimeoutStartSec=0
+
+              [Install]
+              WantedBy=multi-user.target
+            mode: "0644"
+        - name: Enable and start Bitwarden service
+          systemd:
+            name: bitwarden
+            enabled: yes
+            state: started
+            daemon_reload: yes
