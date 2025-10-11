@@ -7,7 +7,7 @@
 gcloud compute instances create bitwarden-tailscale \
     --project=personal-473223 \
     --zone=europe-southwest1-b \
-    --machine-type=e2-medium \
+    --machine-type=e2-small \
     --network-interface=network-tier=STANDARD,stack-type=IPV4_ONLY,subnet=default \
     --metadata=enable-osconfig=TRUE,startup-script='apt update && apt install -y ansible git' \
     --maintenance-policy=MIGRATE \
