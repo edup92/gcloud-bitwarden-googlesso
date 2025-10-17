@@ -98,6 +98,12 @@
 
     - name: Generate SSL
       block:
+        - name: Create ACME account private key
+          community.crypto.openssl_privatekey:
+            path: /etc/letsencrypt/account.key
+            size: 4096
+            type: RSA
+            mode: '0600'
         - name: Create ACME account
           community.crypto.acme_account:
             account_key_src: /etc/letsencrypt/account.key
