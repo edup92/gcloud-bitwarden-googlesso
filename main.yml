@@ -100,10 +100,11 @@
       block:
         - name: Create ACME account
           community.crypto.acme_account:
-            account_key_src: "/opt/bitwarden/bwdata/ssl/account.key"
+            account_key_src: /etc/letsencrypt/account.key
             acme_directory: https://acme-v02.api.letsencrypt.org/directory
-            terms_agreed: true
-
+            acme_version: 2
+            state: present
+            terms_agreed: yes
         - name: Get CERT
           community.crypto.acme_certificate:
             account_key_src: "/opt/bitwarden/bwdata/ssl/account.key"
@@ -121,7 +122,6 @@
             data:
               domains:
                 - "{{ domain }}"
-
         - name: Fix SSL permissions
           file:
             path: "/opt/bitwarden/bwdata/ssl"
