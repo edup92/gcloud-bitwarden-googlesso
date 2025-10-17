@@ -11,6 +11,7 @@
         - name: Update APT cache
           apt:
             update_cache: true
+
         - name: Basic Packages
           apt:
             name:
@@ -24,28 +25,34 @@
               - python3-openssl
               - python3-cryptography
             state: present
+
         - name: Create Docker keyrings directory
           file:
             path: /etc/apt/keyrings
             state: directory
             mode: "0755"
+
         - name: Download Docker GPG key
           get_url:
             url: https://download.docker.com/linux/ubuntu/gpg
             dest: /etc/apt/keyrings/docker.asc
             mode: "0644"
+
         - name: Set permissions for Docker GPG key
           file:
             path: /etc/apt/keyrings/docker.asc
             mode: "0644"
+
         - name: Add Docker repository to Apt sources
           copy:
             dest: /etc/apt/sources.list.d/docker.list
             content: |
               deb [arch=amd64 signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu {{ ansible_lsb.codename | default('noble') }} stable
+
         - name: Update apt cache
           apt:
             update_cache: true
+
         - name: Install Docker
           apt:
             name:
@@ -69,6 +76,7 @@
             append: yes
             state: present
           register: bitwarden_user
+
         - name: Create bitwarden directories
           file:
             path: "{{ item.path }}"
@@ -88,7 +96,6 @@
             - { path: "/opt/bitwarden/bwdata/attachments", mode: "0755" }
             - { path: "/opt/bitwarden/bwdata/nginx", mode: "0755" }
 
-
     - name: Generate SSL
       block:
         - name: Create ACME account
@@ -96,6 +103,7 @@
             account_key_src: "/opt/bitwarden/bwdata/ssl/account.key"
             acme_directory: https://acme-v02.api.letsencrypt.org/directory
             terms_agreed: true
+
         - name: Get CERT
           community.crypto.acme_certificate:
             account_key_src: "/opt/bitwarden/bwdata/ssl/account.key"
@@ -113,6 +121,7 @@
             data:
               domains:
                 - "{{ domain }}"
+
         - name: Fix SSL permissions
           file:
             path: "/opt/bitwarden/bwdata/ssl"
@@ -120,18 +129,20 @@
             group: bitwarden
             mode: "0755"
             recurse: yes
-                
+
     - name: Create bitwarden PFX
       block:
         - name: Generate random password for PFX certificate
           set_fact:
             pfx_password: "{{ lookup('password', '/dev/null length=32 chars=ascii_letters,digits') }}"
+
         - name: Generate Bitwarden Identity certificate
           shell: |
             cd /opt/bitwarden/bwdata/identity
             openssl req -x509 -newkey rsa:2048 -keyout identity.key -out identity.crt -days 3650 -nodes -subj "/CN=Bitwarden Identity"
           register: bitwarden_identity_cert
           changed_when: bitwarden_identity_cert.rc == 0
+
         - name: Generate PKCS#12 certificate bundle for Identity
           shell: |
             cd /opt/bitwarden/bwdata/identity
@@ -143,6 +154,7 @@
               -password pass:{{ pfx_password }}
           register: bitwarden_identity_pfx
           changed_when: bitwarden_identity_pfx.rc == 0
+
         - name: Set ownership and permissions for identity certificates
           file:
             path: "{{ item }}"
@@ -391,7 +403,6 @@
             driver: bridge
             state: present
             attachable: yes
-
         - name: Generate docker-compose.yml
           copy:
             dest: "/opt/bitwarden/bwdata/docker/docker-compose.yml"
