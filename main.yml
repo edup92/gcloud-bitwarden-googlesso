@@ -129,17 +129,13 @@
             group: bitwarden
             mode: "0644"
         - name: Obtain/renew Let’s Encrypt cert (HTTP-01)
-          community.crypto.acme_certificate:
+          acme_certificate:
             account_key_src: /opt/bitwarden/bwdata/ssl/account.key
             csr: /opt/bitwarden/bwdata/ssl/{{ domain }}.csr
-            dest: /opt/bitwarden/bwdata/ssl/{{ domain }}.crt          # fullchain here
-            fullchain_dest: /opt/bitwarden/bwdata/ssl/{{ domain }}.crt
-            chain_dest: /opt/bitwarden/bwdata/ssl/{{ domain }}.chain.crt
-            acme_directory: https://acme-v02.api.letsencrypt.org/directory
-            acme_version: 2
-            challenge: http-01
-            data:
-              domains: ["{{ domain }}"]
+            dest: /opt/bitwarden/bwdata/ssl/{{ domain }}.crt
+            fullchain_dest: /opt/bitwarden/bwdata/ssl/{{ domain }}-fullchain.crt
+            chain_dest: /opt/bitwarden/bwdata/ssl/{{ domain }}-intermediate.crt
+            data: "{{ domain }}"
         - name: Fix ownership & permissions for PEMs
           ansible.builtin.file:
             path: "{{ item.path }}"
