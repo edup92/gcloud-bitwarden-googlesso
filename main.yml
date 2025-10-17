@@ -76,7 +76,6 @@
             append: yes
             state: present
           register: bitwarden_user
-
         - name: Create bitwarden directories
           file:
             path: "{{ item.path }}"
@@ -227,7 +226,7 @@
             dest: "/opt/bitwarden/bwdata/env/uid.env"
             content: |
               LOCAL_UID={{ bitwarden_user.uid }}
-              LOCAL_GID={{ bitwarden_user.gid }}
+              LOCAL_GID={{ bitwarden_user.group }}
             owner: bitwarden
             group: bitwarden
             mode: "0600"
