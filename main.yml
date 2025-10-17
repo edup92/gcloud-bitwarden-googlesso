@@ -98,6 +98,11 @@
 
     - name: Generate SSL
       block:
+        - name: Create /etc/letsencrypt directory
+          file:
+            path: /etc/letsencrypt
+            state: directory
+            mode: '0700'
         - name: Create ACME account private key
           community.crypto.openssl_privatekey:
             path: /etc/letsencrypt/account.key
