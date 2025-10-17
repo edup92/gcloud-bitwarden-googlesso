@@ -120,16 +120,12 @@
           community.crypto.acme_certificate:
             account_key_src: "/opt/bitwarden/bwdata/ssl/account.key"
             csr: "/opt/bitwarden/bwdata/ssl/{{ domain }}.csr"
-            fullchain_dest: "/opt/bitwarden/bwdata/ssl/{{ domain }}.crt"
-            cert_dest: "/opt/bitwarden/bwdata/ssl/{{ domain }}.pem"
-            privatekey_dest: "/opt/bitwarden/bwdata/ssl/{{ domain }}.key"
+            dest: "/opt/bitwarden/bwdata/ssl/{{ domain }}.crt"
+            fullchain_dest: "/opt/bitwarden/bwdata/ssl/{{ domain }}.fullchain.crt"
+            chain_dest: "/opt/bitwarden/bwdata/ssl/{{ domain }}.chain.crt"
             acme_directory: https://acme-v02.api.letsencrypt.org/directory
-            terms_agreed: true
-            dns_challenge: false
-            standalone: true
             acme_version: 2
             challenge: http-01
-            dest: "/opt/bitwarden/bwdata/ssl/{{ domain }}.crt"
             data:
               domains:
                 - "{{ domain }}"
