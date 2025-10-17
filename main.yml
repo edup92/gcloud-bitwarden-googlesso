@@ -402,8 +402,6 @@
             name: bitwarden
             driver: bridge
             state: present
-            attachable: true   # usa true/false, no yes/no
-
         - name: Generate docker-compose.yml
           copy:
             dest: "/opt/bitwarden/bwdata/docker/docker-compose.yml"
@@ -606,9 +604,9 @@
                   internal: true
                 bitwarden:
                   external: true
-          owner: bitwarden
-          group: bitwarden
-          mode: "0644"
+            owner: bitwarden
+            group: bitwarden
+            mode: "0644"
 
         - name: Create systemd service for Bitwarden
           copy:
