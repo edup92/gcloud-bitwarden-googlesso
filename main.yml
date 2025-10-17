@@ -402,7 +402,8 @@
             name: bitwarden
             driver: bridge
             state: present
-            attachable: yes
+            attachable: true   # usa true/false, no yes/no
+
         - name: Generate docker-compose.yml
           copy:
             dest: "/opt/bitwarden/bwdata/docker/docker-compose.yml"
@@ -608,6 +609,7 @@
           owner: bitwarden
           group: bitwarden
           mode: "0644"
+
         - name: Create systemd service for Bitwarden
           copy:
             dest: "/etc/systemd/system/bitwarden.service"
@@ -627,10 +629,10 @@
               [Install]
               WantedBy=multi-user.target
             mode: "0644"
+
         - name: Enable and start Bitwarden service
           systemd:
             name: bitwarden
-            enabled: yes
+            enabled: true
             state: restarted
-            daemon_reload: yes
-            
+            daemon_reload: true
