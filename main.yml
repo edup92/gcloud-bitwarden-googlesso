@@ -529,6 +529,8 @@
                   image: quay.io/oauth2-proxy/oauth2-proxy:latest
                   container_name: bitwarden-oauth2-proxy
                   restart: always
+                  volumes:
+                    - /opt/bitwarden/bwdata/oauth2_proxy/allowed_emails.txt:/etc/oauth2_proxy/allowed_emails.txt:ro
                   environment:
                     - OAUTH2_PROXY_PROVIDER=google
                     - OAUTH2_PROXY_CLIENT_ID={{ oauth_client_id }}
