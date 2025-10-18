@@ -95,13 +95,23 @@ IP_ADDRESS=$(gcloud compute instances describe "$INSTANCE_NAME" \
   --zone="$ZONE" \
   --format='get(networkInterfaces[0].accessConfigs[0].natIP)')
 
-echo "Updating DNS record for $DNS_NAME with IP $IP_ADDRESS..."
-gcloud dns record-sets transaction start --zone="$DNS_ZONE"
-gcloud dns record-sets transaction remove --zone="$DNS_ZONE" \
-  --name="$DNS_NAME" --type="A" "$IP_ADDRESS" 2>/dev/null || true
-gcloud dns record-sets transaction add "$IP_ADDRESS" \
-  --name="$DNS_NAME" --type="A" --zone="$DNS_ZONE"
-gcloud dns record-sets transaction execute --zone="$DNS_ZONE"
+# Remove existing record if present
+gcloud dns record-sets transaction remove "$IP_ADDRESS" \
+  --name="$DNS_NAME" \
+  --type="A" \
+  --ttl=300 \
+  --zone="$DNS_ZONE" \
+  --project="$PROJECT_ID" 2>/dev/null || true
 
-echo
-echo "Deployment complete: instance, snapshots, firewall (no SSH), and DNS configured."
+# Add new record
+gcloud dns record-sets transaction add "$IP_ADDRESS" \
+  --name="$DNS_NAME" \
+  --type="A" \
+  --ttl=300 \
+  --zone="$DNS_ZONE" \
+  --project="$PROJECT_ID"
+
+# Execute transaction
+gcloud dns record-sets transaction execute --project="$PROJECT_ID" --zone="$DNS_ZONE"
+
+echo "DNS record updated successfully."
