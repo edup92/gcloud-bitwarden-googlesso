@@ -517,6 +517,7 @@
                     - "8443"
                   volumes:
                     - ../nginx/bitwarden.conf:/etc/bitwarden/nginx
+                    - ../nginx/bitwarden.conf:/etc/bitwarden/nginx/bitwarden.conf
                     - /etc/letsencrypt/live/{{ domain }}/fullchain.pem:/etc/ssl/certs/fullchain.pem
                     - /etc/letsencrypt/live/{{ domain }}/privkey.pem:/etc/ssl/private/privkey.pem
                     - /etc/letsencrypt/live/{{ domain }}/chain.pem:/etc/ssl/certs/chain.pem
