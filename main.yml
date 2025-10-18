@@ -142,7 +142,8 @@
       block:
         - name: Generate oauth_cookie_secret
           set_fact:
-            oauth_cookie_secret: "{{ lookup('pipe', 'openssl rand -hex 32') }}"
+            # 32 bytes → 44 caracteres base64 (válido para OAuth2-Proxy)
+            oauth_cookie_secret: "{{ lookup('pipe', 'openssl rand -base64 32') | trim }}"
           no_log: true
         - name: Generate Bitwarden mssql.env
           copy:
@@ -173,12 +174,15 @@
                 listen [::]:8080 default_server;
                 server_name {{ domain }};
 
-                location /alive {
+                # Health-check exacto
+                location = /alive {
                   return 200 'alive';
                   add_header Content-Type text/plain;
                 }
 
-                return 301 https://{{ domain }}$request_uri;
+                location / {
+                  return 301 https://{{ domain }}$request_uri;
+                }
 
               }
 

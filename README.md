@@ -40,6 +40,7 @@ gcloud compute disks add-resource-policies bitwarden-tailscale \
 ## Modifica secrets.yml substituyendo los valores demo
 
 domain: "demo"
+admin_email: "demo"
 oauth_client_id: "demo"
 oauth_client_secret: "demo"
 bw_installation_id: "XXXX-XXXX-XXXX"
