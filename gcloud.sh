@@ -111,24 +111,35 @@ IP_ADDRESS=$(gcloud compute instances describe "$INSTANCE_NAME" \
 
 echo "Updating DNS record for $DNS_NAME with IP $IP_ADDRESS..."
 
+# Get current A records
+EXISTING_IPS=$(gcloud dns record-sets list \
+  --project="$PROJECT_ID" \
+  --zone="$DNS_ZONE" \
+  --name="$DNS_NAME" \
+  --type="A" \
+  --format="value(rrdatas)")
+
 TMPDIR=$(mktemp -d)
 TRANSACTION_FILE="$TMPDIR/transaction.yaml"
-
 gcloud dns record-sets transaction start \
   --project="$PROJECT_ID" \
   --zone="$DNS_ZONE" \
   --transaction-file="$TRANSACTION_FILE"
 
-# Remove existing record if present
-gcloud dns record-sets transaction remove "$IP_ADDRESS" \
-  --name="$DNS_NAME" \
-  --type="A" \
-  --ttl=300 \
-  --zone="$DNS_ZONE" \
-  --project="$PROJECT_ID" \
-  --transaction-file="$TRANSACTION_FILE" 2>/dev/null || true
+# Remove existing A record(s) if any
+if [ -n "$EXISTING_IPS" ]; then
+  echo "Removing existing A record(s): $EXISTING_IPS"
+  gcloud dns record-sets transaction remove $EXISTING_IPS \
+    --name="$DNS_NAME" \
+    --type="A" \
+    --ttl=300 \
+    --zone="$DNS_ZONE" \
+    --project="$PROJECT_ID" \
+    --transaction-file="$TRANSACTION_FILE"
+fi
 
 # Add new record
+echo "Adding new A record: $IP_ADDRESS"
 gcloud dns record-sets transaction add "$IP_ADDRESS" \
   --name="$DNS_NAME" \
   --type="A" \
