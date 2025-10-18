@@ -73,25 +73,34 @@ gcloud compute disks add-resource-policies "$INSTANCE_NAME" \
   --zone="$ZONE" \
   --resource-policies="projects/$PROJECT_ID/regions/$REGION/resourcePolicies/$INSTANCE_NAME"
 
-# ==== FIREWALL RULE ====
-echo "Creating firewall rule named $INSTANCE_NAME (HTTP/HTTPS only)..."
-gcloud compute firewall-rules create "$INSTANCE_NAME" \
+# ==== FIREWALL RULES ====
+echo "Creating firewall rules for IPv4 and IPv6..."
+
+# IPv4 rule
+gcloud compute firewall-rules create "${INSTANCE_NAME}-ipv4" \
   --project="$PROJECT_ID" \
   --direction=INGRESS \
   --priority=1000 \
   --network="$NETWORK" \
   --action=ALLOW \
   --rules=tcp:80,tcp:443 \
-  --source-ranges=0.0.0.0/0,::/0 \
+  --source-ranges=0.0.0.0/0 \
   --target-tags="$INSTANCE_NAME" \
-  --description="Allow HTTP and HTTPS from all IPv4 and IPv6 for $INSTANCE_NAME"
+  --description="Allow HTTP and HTTPS from all IPv4 for $INSTANCE_NAME" \
+  2>/dev/null || echo "IPv4 rule already exists, skipping."
 
-# ==== APPLY NETWORK TAG ====
-echo "Applying network tag '$INSTANCE_NAME' to instance..."
-gcloud compute instances add-tags "$INSTANCE_NAME" \
+# IPv6 rule
+gcloud compute firewall-rules create "${INSTANCE_NAME}-ipv6" \
   --project="$PROJECT_ID" \
-  --zone="$ZONE" \
-  --tags="$INSTANCE_NAME"
+  --direction=INGRESS \
+  --priority=1000 \
+  --network="$NETWORK" \
+  --action=ALLOW \
+  --rules=tcp:80,tcp:443 \
+  --source-ranges=::/0 \
+  --target-tags="$INSTANCE_NAME" \
+  --description="Allow HTTP and HTTPS from all IPv6 for $INSTANCE_NAME" \
+  2>/dev/null || echo "IPv6 rule already exists, skipping."
 
 # ==== DNS RECORD ====
 echo "Retrieving external IP..."
@@ -100,13 +109,24 @@ IP_ADDRESS=$(gcloud compute instances describe "$INSTANCE_NAME" \
   --zone="$ZONE" \
   --format='get(networkInterfaces[0].accessConfigs[0].natIP)')
 
+echo "Updating DNS record for $DNS_NAME with IP $IP_ADDRESS..."
+
+TMPDIR=$(mktemp -d)
+TRANSACTION_FILE="$TMPDIR/transaction.yaml"
+
+gcloud dns record-sets transaction start \
+  --project="$PROJECT_ID" \
+  --zone="$DNS_ZONE" \
+  --transaction-file="$TRANSACTION_FILE"
+
 # Remove existing record if present
 gcloud dns record-sets transaction remove "$IP_ADDRESS" \
   --name="$DNS_NAME" \
   --type="A" \
   --ttl=300 \
   --zone="$DNS_ZONE" \
-  --project="$PROJECT_ID" 2>/dev/null || true
+  --project="$PROJECT_ID" \
+  --transaction-file="$TRANSACTION_FILE" 2>/dev/null || true
 
 # Add new record
 gcloud dns record-sets transaction add "$IP_ADDRESS" \
@@ -114,9 +134,14 @@ gcloud dns record-sets transaction add "$IP_ADDRESS" \
   --type="A" \
   --ttl=300 \
   --zone="$DNS_ZONE" \
-  --project="$PROJECT_ID"
+  --project="$PROJECT_ID" \
+  --transaction-file="$TRANSACTION_FILE"
 
 # Execute transaction
-gcloud dns record-sets transaction execute --project="$PROJECT_ID" --zone="$DNS_ZONE"
+gcloud dns record-sets transaction execute \
+  --project="$PROJECT_ID" \
+  --zone="$DNS_ZONE" \
+  --transaction-file="$TRANSACTION_FILE"
 
+rm -rf "$TMPDIR"
 echo "DNS record updated successfully."
