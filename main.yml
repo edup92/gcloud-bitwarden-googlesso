@@ -91,6 +91,7 @@
             - { path: "/opt/bitwarden/bwdata/mssql", mode: "0755" }
             - { path: "/opt/bitwarden/bwdata/attachments", mode: "0755" }
             - { path: "/opt/bitwarden/bwdata/nginx", mode: "0755" }
+            - { path: "/opt/bitwarden/bwdata/oauth2_proxy", mode: "0755" }
 
     - name: Generate SSL
       block:
@@ -140,10 +141,17 @@
 
     - name: Create bitwarden config files
       block:
-        - name: Generate oauth_cookie_secret
+        - name: Generate oauth proxy oauth_cookie_secret
           set_fact:
             oauth_cookie_secret: "{{ lookup('pipe', 'openssl rand -base64 48 | tr -dc A-Za-z0-9 | head -c 32') }}"
           no_log: true
+        - name: Generate oauth proxy allowed accounts
+          copy:
+            dest: /opt/bitwarden/bwdata/oauth2_proxy/allowed_emails.txt
+            content: "{{ admin_email }}"
+            owner: bitwarden
+            group: bitwarden
+            mode: "0644"
         - name: Generate Bitwarden mssql.env
           copy:
             dest: "/opt/bitwarden/bwdata/env/mssql.env"
@@ -527,7 +535,7 @@
                     - OAUTH2_PROXY_CLIENT_SECRET={{ oauth_client_secret }}
                     - OAUTH2_PROXY_COOKIE_SECRET={{ oauth_cookie_secret }}
                     - OAUTH2_PROXY_REDIRECT_URL=https://{{ domain }}/oauth2/callback
-                    - OAUTH2_PROXY_EMAIL_DOMAINS={{ admin_email }}
+                    - OAUTH2_PROXY_AUTHENTICATED_EMAILS_FILE=/etc/oauth2_proxy/allowed_emails.txt
                     - OAUTH2_PROXY_UPSTREAMS=https://bitwarden-nginx:8443
                     - OAUTH2_PROXY_SSL_INSECURE_SKIP_VERIFY=true
                     - OAUTH2_PROXY_HTTP_ADDRESS=0.0.0.0:4180
