@@ -53,8 +53,7 @@ gcloud compute instances create "$INSTANCE_NAME" \
   --shielded-integrity-monitoring \
   --labels=goog-ec-src=vm_add-gcloud \
   --reservation-affinity=any \
-  --deletion-protection \
-  --tags="$INSTANCE_NAME"
+  --deletion-protection
 
 # ==== SNAPSHOT POLICY ====
 echo "Creating snapshot policy..."
@@ -85,8 +84,14 @@ gcloud compute firewall-rules create "$INSTANCE_NAME" \
   --rules=tcp:80,tcp:443 \
   --source-ranges=0.0.0.0/0,::/0 \
   --target-tags="$INSTANCE_NAME" \
-  --description="Allow HTTP and HTTPS from all IPv4 and IPv6 for $INSTANCE_NAME" \
-  2>/dev/null || echo "Firewall rule already exists, skipping."
+  --description="Allow HTTP and HTTPS from all IPv4 and IPv6 for $INSTANCE_NAME"
+
+# ==== APPLY NETWORK TAG ====
+echo "Applying network tag '$INSTANCE_NAME' to instance..."
+gcloud compute instances add-tags "$INSTANCE_NAME" \
+  --project="$PROJECT_ID" \
+  --zone="$ZONE" \
+  --tags="$INSTANCE_NAME"
 
 # ==== DNS RECORD ====
 echo "Retrieving external IP..."
