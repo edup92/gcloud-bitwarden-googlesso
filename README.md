@@ -1,4 +1,4 @@
-# Pasos para instalar Ansible y ejecutar el playbook
+# Bitwarden SelfHosted with Google SSO in Google Cloud
 
 ## 1 - Crea zona dns en google cloud, crea instancia, snapshot schedule y firewall
 
