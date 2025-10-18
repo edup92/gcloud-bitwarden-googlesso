@@ -1,43 +1,13 @@
 # Pasos para instalar Ansible y ejecutar el playbook
 
-## 1 - Creacion de instancia de google cloud, snapshot job y firewall. Ejecutar en Cloud Shell (incluye ansible)
+## 1 - Crea zona dns en google cloud, crea instancia, snapshot schedule y firewall
 
 ```bash
-
-gcloud compute instances create bitwarden-ssogoogle \
-    --project=personal-473223 \
-    --zone=europe-southwest1-b \
-    --machine-type=e2-small \
-    --network-interface=network-tier=STANDARD,stack-type=IPV4_ONLY,subnet=default \
-    --metadata=enable-osconfig=TRUE,startup-script='apt update && apt install -y ansible git' \
-    --maintenance-policy=MIGRATE \
-    --provisioning-model=STANDARD \
-    --service-account=32608782837-compute@developer.gserviceaccount.com \
-    --scopes=https://www.googleapis.com/auth/devstorage.read_only,https://www.googleapis.com/auth/logging.write,https://www.googleapis.com/auth/monitoring.write,https://www.googleapis.com/auth/service.management.readonly,https://www.googleapis.com/auth/servicecontrol,https://www.googleapis.com/auth/trace.append \
-    --create-disk=auto-delete=yes,boot=yes,device-name=bitwarden-ssogoogle,image=projects/ubuntu-os-cloud/global/images/ubuntu-minimal-2404-noble-amd64-v20251002,mode=rw,size=25,type=pd-balanced \
-    --no-shielded-secure-boot \
-    --shielded-vtpm \
-    --shielded-integrity-monitoring \
-    --labels=goog-ec-src=vm_add-gcloud \
-    --reservation-affinity=any \
-    --deletion-protection
-
-gcloud compute resource-policies create snapshot-schedule bitwarden-ssogoogle \
-    --project=personal-473223 \
-    --region=europe-southwest1 \
-    --max-retention-days=31 \
-    --on-source-disk-delete=keep-auto-snapshots \
-    --daily-schedule \
-    --start-time=00:00 \
-    --storage-location=europe-southwest1
-
-gcloud compute disks add-resource-policies bitwarden-ssogoogle \
-    --project=personal-473223 \
-    --zone=europe-southwest1-b \
-    --resource-policies=projects/personal-473223/regions/europe-southwest1/resourcePolicies/bitwarden-ssogoogle
+ git clone https://github.com/edup92/gcloud-bitwarden-ssogoogle.git   chmod +x gcloud.sh ; ./gcloud.sh
 ```
 
-## Modifica secrets.yml substituyendo los valores demo
+
+## 2- Modifica secrets.yml substituyendo los valores demo
 
 domain: "demo"
 admin_email: "demo"
@@ -55,7 +25,7 @@ bw_smtp__username: "demo"
 bw_smtp__password: "demo"
 
 
-## Ejecución del playbook
+## 3 - Ejecuta el playbook en el servidor
 
 ```bash
  git clone https://github.com/edup92/gcloud-bitwarden-ssogoogle.git ; ansible-playbook gcloud-bitwarden-ssogoogle/main.yml --connection=local -e @gcloud-bitwarden-ssogoogle/secrets.yml
