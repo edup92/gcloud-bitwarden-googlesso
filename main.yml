@@ -215,6 +215,12 @@
                 include /etc/nginx/security-headers-ssl.conf;
                 include /etc/nginx/security-headers.conf;
 
+                # Health-check HTTPS
+                location = /alive {
+                  return 200 'alive';
+                  add_header Content-Type text/plain;
+                }
+
                 location / {
                   proxy_pass http://web:5000/;
                   include /etc/nginx/security-headers-ssl.conf;
