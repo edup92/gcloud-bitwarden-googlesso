@@ -28,7 +28,7 @@ bw_smtp__password: "demo"
 ## 3 - Ejecuta el playbook en el servidor
 
 ```bash
- git clone https://github.com/edup92/gcloud-bitwarden-googlesso.git ; ansible-playbook gcloud-bitwarden-googlesso/main.yml --connection=local -e @gcloud-bitwarden-ssogoogle/secrets.yml
+ git clone https://github.com/edup92/gcloud-bitwarden-googlesso.git ; ansible-playbook gcloud-bitwarden-googlesso/main.yml --connection=local -e @gcloud-bitwarden-googlesso/secrets.yml
 ```
 
 ## Ver estado
