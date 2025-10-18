@@ -35,15 +35,12 @@ echo "DNS record:     $DNS_NAME"
 echo "=============================="
 echo
 
-# ==== CREATE INSTANCE ====
-echo "Creating instance ${INSTANCE_NAME} with network tag '${INSTANCE_NAME}'..."
+echo "Creating instance ${INSTANCE_NAME}..."
 gcloud compute instances create "$INSTANCE_NAME" \
   --project="$PROJECT_ID" \
   --zone="$ZONE" \
   --machine-type=e2-small \
-  --network="$NETWORK" \
-  --subnet="$NETWORK" \
-  --tags="$INSTANCE_NAME" \
+  --network-interface=network-tier=STANDARD,stack-type=IPV4_ONLY,subnet="$NETWORK" \
   --metadata=enable-osconfig=TRUE,startup-script='apt update && apt install -y ansible git' \
   --maintenance-policy=MIGRATE \
   --provisioning-model=STANDARD \
@@ -56,6 +53,13 @@ gcloud compute instances create "$INSTANCE_NAME" \
   --labels=goog-ec-src=vm_add-gcloud \
   --reservation-affinity=any \
   --deletion-protection
+
+# ==== APPLY NETWORK TAG ====
+echo "Applying network tag '$INSTANCE_NAME'..."
+gcloud compute instances add-tags "$INSTANCE_NAME" \
+  --project="$PROJECT_ID" \
+  --zone="$ZONE" \
+  --tags="$INSTANCE_NAME"
 
 # ==== SNAPSHOT POLICY ====
 echo "Creating snapshot policy..."
