@@ -21,9 +21,7 @@
               - ca-certificates
               - nano
               - unzip
-              - python3-acme
-              - python3-openssl
-              - python3-cryptography
+              - certbot
             state: present
 
         - name: Create Docker keyrings directory
@@ -97,59 +95,16 @@
 
     - name: Generate SSL
       block:
-        - name: Create ACME account private key
-          community.crypto.openssl_privatekey:
-            path: /opt/bitwarden/bwdata/ssl/account.key
-            size: 4096
-            type: RSA
-            owner: bitwarden
-            group: bitwarden
-            mode: "0600"
-        - name: Register/ensure ACME account
-          community.crypto.acme_account:
-            account_key_src: /opt/bitwarden/bwdata/ssl/account.key
-            acme_directory: https://acme-v02.api.letsencrypt.org/directory
-            acme_version: 2
-            terms_agreed: true
-            state: present
-        - name: Create domain private key
-          community.crypto.openssl_privatekey:
-            path: /opt/bitwarden/bwdata/ssl/{{ domain }}.key
-            size: 2048
-            type: RSA
-            owner: bitwarden
-            group: bitwarden
-            mode: "0600"
-        - name: Create domain CSR
-          community.crypto.openssl_csr:
-            path: /opt/bitwarden/bwdata/ssl/{{ domain }}.csr
-            privatekey_path: /opt/bitwarden/bwdata/ssl/{{ domain }}.key
-            common_name: "{{ domain }}"
-            owner: bitwarden
-            group: bitwarden
-            mode: "0644"
-        - name: Obtain/renew Let’s Encrypt cert (HTTP-01)
-          acme_certificate:
-
-            acme_directory: https://acme-v02.api.letsencrypt.org/directory
-            acme_version: 2
-
-            account_key_src: /opt/bitwarden/bwdata/ssl/account.key
-            csr: /opt/bitwarden/bwdata/ssl/{{ domain }}.csr
-            dest: /opt/bitwarden/bwdata/ssl/{{ domain }}.crt
-            fullchain_dest: /opt/bitwarden/bwdata/ssl/{{ domain }}-fullchain.crt
-            chain_dest: /opt/bitwarden/bwdata/ssl/{{ domain }}-intermediate.crt
-            data: "{{ domain }}"
-        - name: Fix ownership & permissions for PEMs
-          ansible.builtin.file:
-            path: "{{ item.path }}"
-            owner: bitwarden
-            group: bitwarden
-            mode: "{{ item.mode }}"
-          loop:
-            - { path: "/opt/bitwarden/bwdata/ssl/{{ domain }}.crt",  mode: "0644" }
-            - { path: "/opt/bitwarden/bwdata/ssl/{{ domain }}.key",  mode: "0600" }
-            - { path: "/opt/bitwarden/bwdata/ssl/{{ domain }}.chain.crt", mode: "0644" }
+        - name: Get SSL certbot
+          ansible.builtin.command:
+            cmd: >
+              certbot certonly --standalone -d {{ domain }} --non-interactive --agree-tos -m {{ admin_email }} --rsa-key-size 2048 --keep-until-expiring
+          register: certbot_result
+          changed_when: "'Congratulations' in certbot_result.stdout or 'no action taken' not in certbot_result.stdout"
+          failed_when: certbot_result.rc != 0 and "'no action taken' not in certbot_result.stdout"
+        - name: Get certbot output
+          ansible.builtin.debug:
+            var: certbot_result.stdout
 
     - name: Create bitwarden PFX
       block:
@@ -628,7 +583,6 @@
             owner: bitwarden
             group: bitwarden
             mode: "0644"
-
         - name: Create systemd service for Bitwarden
           copy:
             dest: "/etc/systemd/system/bitwarden.service"
