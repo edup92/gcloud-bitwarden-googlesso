@@ -35,7 +35,6 @@ echo "DNS record:     $DNS_NAME"
 echo "=============================="
 echo
 
-# ==== CREATE INSTANCE ====
 echo "Creating instance ${INSTANCE_NAME}..."
 gcloud compute instances create "$INSTANCE_NAME" \
   --project="$PROJECT_ID" \
@@ -54,6 +53,13 @@ gcloud compute instances create "$INSTANCE_NAME" \
   --labels=goog-ec-src=vm_add-gcloud \
   --reservation-affinity=any \
   --deletion-protection
+
+# ==== APPLY NETWORK TAG ====
+echo "Applying network tag '$INSTANCE_NAME'..."
+gcloud compute instances add-tags "$INSTANCE_NAME" \
+  --project="$PROJECT_ID" \
+  --zone="$ZONE" \
+  --tags="$INSTANCE_NAME"
 
 # ==== SNAPSHOT POLICY ====
 echo "Creating snapshot policy..."
