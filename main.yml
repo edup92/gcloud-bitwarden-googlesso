@@ -142,8 +142,7 @@
       block:
         - name: Generate oauth_cookie_secret
           set_fact:
-            # 32 bytes → 44 caracteres base64 (válido para OAuth2-Proxy)
-            oauth_cookie_secret: "{{ lookup('pipe', 'openssl rand -base64 32') | trim }}"
+            oauth_cookie_secret: "{{ lookup('pipe', 'openssl rand -base64 48 | tr -dc A-Za-z0-9 | head -c 32') }}"
           no_log: true
         - name: Generate Bitwarden mssql.env
           copy:
