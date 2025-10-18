@@ -537,7 +537,7 @@
                     - OAUTH2_PROXY_CLIENT_SECRET={{ oauth_client_secret }}
                     - OAUTH2_PROXY_COOKIE_SECRET={{ oauth_cookie_secret }}
                     - OAUTH2_PROXY_REDIRECT_URL=https://{{ domain }}/oauth2/callback
-                    - OAUTH2_PROXY_EMAIL_DOMAINS=*
+                    - OAUTH2_PROXY_EMAIL_DOMAINS={{ admin_email }}
                     - OAUTH2_PROXY_UPSTREAMS=https://bitwarden-nginx:8443
                     - OAUTH2_PROXY_SSL_INSECURE_SKIP_VERIFY=true
                     - OAUTH2_PROXY_HTTP_ADDRESS=0.0.0.0:4180
@@ -592,7 +592,6 @@
               [Install]
               WantedBy=multi-user.target
             mode: "0644"
-
         - name: Enable and start Bitwarden service
           systemd:
             name: bitwarden
