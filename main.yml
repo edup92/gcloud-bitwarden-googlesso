@@ -546,9 +546,7 @@
                     - OAUTH2_PROXY_PASS_USER_HEADERS=true
                     - OAUTH2_PROXY_SKIP_PROVIDER_BUTTON=true
                     # salta auth en los paths que usa la app
-                    - OAUTH2_PROXY_SKIP_AUTH_ROUTES=^/identity/,^/api/,^/attachments/,^/icons/,^/events/,^/notifications/
-                    # si la petición llega con Authorization: Bearer <jwt> no redirige
-                    # - OAUTH2_PROXY_SKIP_JWT_BEARER_TOKENS=true
+                    - OAUTH2_PROXY_SKIP_AUTH_ROUTES=^/identity/,^/api/
                   networks:
                     - bitwarden
                   depends_on:
