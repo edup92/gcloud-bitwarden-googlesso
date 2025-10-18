@@ -3,7 +3,7 @@
 ## 1 - Crea zona dns en google cloud, crea instancia, snapshot schedule y firewall
 
 ```bash
- git clone https://github.com/edup92/gcloud-bitwarden-ssogoogle.git ; chmod +x gcloud.sh ; ./gcloud.sh
+ git clone https://github.com/edup92/gcloud-bitwarden-googlesso.git ; chmod +x gcloud-bitwarden-googlesso/gcloud.sh ; gcloud-bitwarden-googlesso/gcloud.sh
 ```
 
 
