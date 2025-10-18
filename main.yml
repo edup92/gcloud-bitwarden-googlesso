@@ -164,9 +164,9 @@
             owner: bitwarden
             group: bitwarden
             mode: "0600"
-        - name: Generate bitwarden container nginx conf
+        - name: Generate bitwarden container bitwarden conf
           copy:
-            dest: "/opt/bitwarden/bwdata/nginx/default.conf"
+            dest: "/opt/bitwarden/bwdata/nginx/bitwarden.conf"
             content: |
               server {
                 listen 8080 default_server;
@@ -302,7 +302,7 @@
             mode: "0644"
         - name: Generate nginx proxy conf
           copy:
-            dest: "/opt/bitwarden/bwdata/docker/nginx-proxy.conf"
+            dest: "/opt/bitwarden/bwdata/nginx/proxy.conf"
             content: |
               server {
                 listen 80;
@@ -505,7 +505,7 @@
                     - "8080"
                     - "8443"
                   volumes:
-                    - ../nginx:/etc/bitwarden/nginx
+                    - ../nginx/bitwarden.conf:/etc/bitwarden/nginx
                     - /etc/letsencrypt/live/{{ domain }}/fullchain.pem:/etc/ssl/certs/fullchain.pem:ro
                     - /etc/letsencrypt/live/{{ domain }}/privkey.pem:/etc/ssl/private/privkey.pem:ro
                     - /etc/letsencrypt/live/{{ domain }}/chain.pem:/etc/ssl/certs/chain.pem:ro
@@ -548,7 +548,7 @@
                   ports:
                     - "443:443"
                   volumes:
-                    - ./nginx-proxy.conf:/etc/nginx/conf.d/default.conf:ro
+                    - ../nginx/proxy.conf:/etc/nginx/conf.d/default.conf:ro
                     - /etc/letsencrypt/live/{{ domain }}/fullchain.pem:/etc/ssl/certs/fullchain.pem:ro
                     - /etc/letsencrypt/live/{{ domain }}/privkey.pem:/etc/ssl/private/privkey.pem:ro
                     - /etc/letsencrypt/live/{{ domain }}/chain.pem:/etc/ssl/certs/chain.pem:ro
