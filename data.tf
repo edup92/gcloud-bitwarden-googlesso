@@ -1,2 +1,4 @@
-data "aws_availability_zones" "available" {}
-data "aws_region" "current" {}
+data "google_compute_zones" "available" {
+  project = var.project_id
+  region  = var.region
+}
