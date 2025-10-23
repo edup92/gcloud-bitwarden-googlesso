@@ -2,7 +2,16 @@
 
 # Whats inside
 
-- Creates Gcloud infra (server, firewall, load balancer, managed ssl, waf with allowed country)
+- Creates github oidc role with limited access to project and env named resources
+- Creates tfstate s3 bucket with versioning, encryption and access only to role
+- Creates ec2 keypair for project
+- Add one or more public domains from the project to Route 53 (optional)
+- Creates AZ VPC with 1 public subnet, 1 private subnet with NAT router+tailscale (Optional)
+    - Instance details: ARM Amazon linux 2023, arm on public Subnet, with inbound denied security group and created keypair
+    - Tailscale details: Adds machine to Taiscale, added subnet to access nat private instances you need to approbe subnets
+    - Nat details: NAT forwarded to allow outbound internet traffic from nat subnet
+- Creates one all open security group (testing purposes)
+- Creates Github runner
 
 # Usage instructions
 
@@ -11,25 +20,23 @@
 ### 2) Clone repository
 
 ```bash
-git clone https://github.com/edup92/gcloud-bitwarden-googlesso.git
+git clone https://github.com/zenpresscloudorg/aws-bootstrap
 ```
 
 ### 4) Create vars.json file
 ```bash
-cat > gcloud-bitwarden-googlesso/vars.json <<EOF
+cat > aws-bootstrap/vars.json <<EOF
 {
-  "domain": "demo",
-  "admin_email": "demo",
-  "oauth_client_id": "demo",
-  "oauth_client_secret": "demo",
-  "bw_installation_id": "XXXX-XXXX-XXXX",
-  "bw_installation_key": "YYYYYYYYYYYYYYYY",
-  "bw_db_password": "demo",
-  "bw_smtp__host": "demo",
-  "bw_smtp__port": 587,
-  "bw_smtp__ssl": true,
-  "bw_smtp__username": "demo",
-  "bw_smtp__password": "demo"
+   "project_name":"demo",
+   "project_environment":"dev/prod",
+   "vpc_cidr": "10.0.0.0/16 (must be cidr format)", 
+   "vpc_ipv6_enable": true/false,
+   "tailscale_auth_key": "Token from tailscale auth section",
+   "hostedzones_public": "demo.demo",
+   "hostedzones_private": "demo.demo",
+   "gh_org": "github organization name",
+   "gh_dispatcher_token": "github pat token to dispatch workflows"
+   "gh_runner_token": "Github org runner token"
 }
 EOF
 ```
@@ -37,11 +44,5 @@ EOF
 ### 5) Run runme.sh
 
 ```bash
-chmod +x gcloud-bitwarden-googlesso/runnme.sh ; gcloud-bitwarden-googlesso/runnme.sh
-```
-
-### View status
-
-```bash
-sudo -u bitwarden bash -c 'cd /opt/bitwarden/bwdata/docker && docker compose ps'
+chmod +x aws-bootstrap/runnme.sh ; aws-bootstrap/runnme.sh
 ```
