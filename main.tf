@@ -75,7 +75,7 @@ resource "google_compute_instance" "instance_bitwarden" {
   tags = [local.instance_bitwarden_name]
 }
 
-# Snapshot policy
+# Snapshot
 
 resource "google_compute_resource_policy" "snapshot_policy" {
   name   = local.snapshot_bitwarden_name
@@ -104,6 +104,68 @@ resource "google_compute_disk_resource_policy_attachment" "disk_policy_attachmen
   resource_policy = google_compute_resource_policy.snapshot_policy.id
 }
 
+# Cloud armor
+
+resource "google_compute_security_policy" "cloudarmor_main" {
+  name        = local.cloudarmor_bitwarden_name
+  rule {
+    priority    = 1000
+    description = "Allow ES"
+    match {
+      expr {
+        expression = "inIpRange(origin.region_code, var.allowed_countries)"
+      }
+    }
+    action = "allow"
+  }
+  rule {
+    priority    = 2000
+    description = "Deny others"
+    action      = "deny(403)"
+  }
+}
+
+# Instancegroup
+
+resource "google_compute_instance_group" "instancegroup_bitwarden" {
+  name        = local.instancegroup_bitwarden_name
+  zone     = data.google_compute_zones.available.names[0]
+  instances   = [google_compute_instance.instance_bitwarden.self_link]
+}
+
+# Healthcheck
+
+resource "google_compute_health_check" "healthcheck_80" {
+  name               = local.healthcheck_80_name
+  check_interval_sec = 30
+  timeout_sec        = 10
+  http_health_check {
+    port = 80
+  }
+}
+
+# Backend Service
+
+resource "google_compute_backend_service" "backend_main" {
+  name                  = local.backend_bitwarden_name
+  protocol              = "HTTP"
+  port_name             = "http"
+  health_checks         = [google_compute_health_check.healthcheck_80.id]
+  connection_draining_timeout_sec = 10
+  load_balancing_scheme = "EXTERNAL"
+  backend {
+    group = google_compute_instance_group.instancegroup_bitwarden.self_link
+  }
+  security_policy = google_compute_security_policy.allow_spain.id
+}
+
+# Urlmap
+
+resource "google_compute_url_map" "urlmap_main" {
+  name            = local.urlmap_bitwarden_name
+  default_service = google_compute_backend_service.backend_main.id
+}
+
 # Firewall
 
 resource "google_compute_firewall" "allow_lb_hc" {
@@ -119,3 +181,4 @@ resource "google_compute_firewall" "allow_lb_hc" {
   source_ranges = ["130.211.0.0/22", "35.191.0.0/16"]
   target_tags   = [local.instance_bitwarden_name]
 }
+
