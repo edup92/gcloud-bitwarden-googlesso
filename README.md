@@ -3,20 +3,21 @@
 # Whats inside
 
 - Creates gcloud infra (instance, load balancer, firewall, waf, managed ssl, dns record)
+- Installs bitwarden containers with Google SSO proxy
 
 # Usage instructions
 
-### 1) Login in AWS CloudShell (login in aws region you want to bootstrap)
+### 1) Login in Google Cloud Shell
 
 ### 2) Clone repository
 
 ```bash
-git clone https://github.com/zenpresscloudorg/aws-bootstrap
+git clone https://github.com/edup92/gcloud-bitwarden-googlesso.git
 ```
 
 ### 4) Create vars.json file
 ```bash
-cat > aws-bootstrap/vars.json <<EOF
+cat > gcloud-bitwarden-googlesso/vars.json <<EOF
 { 
   "gcloud_project_name":"demo",
   "gcloud_region":"demo",
@@ -41,5 +42,5 @@ EOF
 ### 5) Run runme.sh
 
 ```bash
-chmod +x aws-bootstrap/runnme.sh ; aws-bootstrap/runnme.sh
+chmod +x gcloud-bitwarden-googlesso/runnme.sh ; gcloud-bitwarden-googlesso/runnme.sh
 ```
