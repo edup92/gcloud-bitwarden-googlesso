@@ -19,7 +19,7 @@ git clone https://github.com/edup92/gcloud-bitwarden-googlesso.git
 ```bash
 cat > gcloud-bitwarden-googlesso/vars.json <<EOF
 { 
-  "gcloud_project_name":"demo",
+  "gcloud_project_id":"demo",
   "gcloud_region":"demo",
   "domain": "demo.tld",
   "admin_email": "demo",

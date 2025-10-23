@@ -1,5 +1,5 @@
-variable "gcloud_project_name" {
-  description = "Google Cloud Project Name"
+variable "gcloud_project_id" {
+  description = "Google Cloud Project ID"
   type        = string
 }
 

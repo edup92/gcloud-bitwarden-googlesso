@@ -6,19 +6,17 @@ locals {
   project_name = "bitwarden"
 
   # Instances
-  instances_ami        = "ami-0cd0767d8ed6ad0a9"
-  instances_type       = "t4g.nano"
-  instances_disk       = "gp3"
-  keypair_main_name    = "${var.project_name}-keypair-main"
+  
+  instances_image        = "projects/ubuntu-os-cloud/global/images/ubuntu-minimal-2404-noble-amd64-v20251002"
+  instances_type       = "e2-small"
+  instances_disk_model       = "pd-balanced"
+  instances_disk_size       = 25
+  sshkey_main_name    = "${var.project_name}-sshkey-main"
   instance_bitwarden_name  = "${var.project_name}-instance-bitwarden"
   disk_bitwarden_name       = "${var.project_name}-disk-bitwarden"
 
   
 }
-
-read -p "Enter instance name [default: bitwarden-ssogoogle]: " INSTANCE_NAME; INSTANCE_NAME=${INSTANCE_NAME:-bitwarden-ssogoogle}
-read -p "Enter Cloud DNS zone name [default: edup92mail-zone]: " DNS_ZONE; DNS_ZONE=${DNS_ZONE:-test-zone}
-read -p "Enter DNS record (FQDN ending with dot) [default: test.xyz.]: " DNS_NAME; DNS_NAME=${DNS_NAME:-test.xyz.}
 
 NETWORK="default"
 LB_NAME="${INSTANCE_NAME}-lb"
