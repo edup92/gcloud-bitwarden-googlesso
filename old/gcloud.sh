@@ -3,26 +3,24 @@
 # Creates a Bitwarden VM instance with snapshots, firewall, and DNS A record
 
 # ==== USER INPUT ====
-DEFAULT_PROJECT=$(gcloud config get-value project 2>/dev/null)
+
 read -p "Enter GCP project ID [default: ${DEFAULT_PROJECT}]: " PROJECT_ID
-PROJECT_ID=${PROJECT_ID:-$DEFAULT_PROJECT}
-
-read -p "Enter region [default: europe-southwest1]: " REGION
-REGION=${REGION:-europe-southwest1}
-
-read -p "Enter zone [default: europe-southwest1-b]: " ZONE
-ZONE=${ZONE:-europe-southwest1-b}
-
-read -p "Enter instance name [default: bitwarden-ssogoogle]: " INSTANCE_NAME
-INSTANCE_NAME=${INSTANCE_NAME:-bitwarden-ssogoogle}
-
-read -p "Enter Cloud DNS zone name [default: edup92mail-zone]: " DNS_ZONE
-DNS_ZONE=${DNS_ZONE:-edup92mail-zone}
-
-read -p "Enter DNS record (FQDN) [default: vault.edup92mail.xyz.]: " DNS_NAME
-DNS_NAME=${DNS_NAME:-vault.edup92mail.xyz.}
+read -p "Enter region [default: europe-southwest1]: " REGION; REGION=${REGION:-europe-southwest1}
+read -p "Enter zone [default: europe-southwest1-b]: " ZONE; ZONE=${ZONE:-europe-southwest1-b}
+read -p "Enter instance name [default: bitwarden-ssogoogle]: " INSTANCE_NAME; INSTANCE_NAME=${INSTANCE_NAME:-bitwarden-ssogoogle}
+read -p "Enter Cloud DNS zone name [default: edup92mail-zone]: " DNS_ZONE; DNS_ZONE=${DNS_ZONE:-test-zone}
+read -p "Enter DNS record (FQDN ending with dot) [default: test.xyz.]: " DNS_NAME; DNS_NAME=${DNS_NAME:-test.xyz.}
 
 NETWORK="default"
+LB_NAME="${INSTANCE_NAME}-lb"
+IG_NAME="${LB_NAME}-ig"
+BACKEND="${LB_NAME}-backend"
+URL_MAP="${LB_NAME}-urlmap"
+SEC_POLICY="${LB_NAME}-policy"
+HC_NAME="${LB_NAME}-hc"
+CERT_NAME="${LB_NAME}-cert"
+PROXY="${LB_NAME}-https-proxy"
+FWD_RULE="${LB_NAME}-https-fwd"
 
 echo
 echo "=== CONFIGURATION SUMMARY ==="
@@ -80,33 +78,47 @@ gcloud compute disks add-resource-policies "$INSTANCE_NAME" \
   --resource-policies="projects/$PROJECT_ID/regions/$REGION/resourcePolicies/$INSTANCE_NAME"
 
 # ==== FIREWALL RULES ====
-echo "Creating firewall rules for IPv4 and IPv6..."
+echo "Creating firewall rule"
 
-# IPv4 rule
-gcloud compute firewall-rules create "${INSTANCE_NAME}-ipv4" \
+gcloud compute firewall-rules create "${INSTANCE_NAME}-allow-lb-hc" \
   --project="$PROJECT_ID" \
   --direction=INGRESS \
   --priority=1000 \
   --network="$NETWORK" \
   --action=ALLOW \
   --rules=tcp:80,tcp:443 \
-  --source-ranges=0.0.0.0/0 \
+  --source-ranges="130.211.0.0/22,35.191.0.0/16" \
   --target-tags="$INSTANCE_NAME" \
-  --description="Allow HTTP and HTTPS from all IPv4 for $INSTANCE_NAME" \
-  2>/dev/null || echo "IPv4 rule already exists, skipping."
+  --description="Allow Google LB and health check ranges" \
+  2>/dev/null || echo "Firewall rule already exists."
 
-# IPv6 rule
-gcloud compute firewall-rules create "${INSTANCE_NAME}-ipv6" \
-  --project="$PROJECT_ID" \
-  --direction=INGRESS \
-  --priority=1000 \
-  --network="$NETWORK" \
-  --action=ALLOW \
-  --rules=tcp:80,tcp:443 \
-  --source-ranges=::/0 \
-  --target-tags="$INSTANCE_NAME" \
-  --description="Allow HTTP and HTTPS from all IPv6 for $INSTANCE_NAME" \
-  2>/dev/null || echo "IPv6 rule already exists, skipping."
+# ==== INSTACE GROUPS ====
+echo "Creating Instance Group"
+
+gcloud compute instance-groups unmanaged create "$IG_NAME" --zone="$ZONE" 2>/dev/null || true
+gcloud compute instance-groups unmanaged add-instances "$IG_NAME" --instances="$INSTANCE_NAME" --zone="$ZONE"
+
+# ==== INSTACE GROUPS ====
+echo "Creating Health Check"
+
+gcloud compute health-checks create http "$HC_NAME" --port 80 --check-interval=30s --timeout=10s 2>/dev/null || true
+
+# ==== LB ====
+echo "Creating LB"
+
+gcloud compute backend-services create "$BACKEND" \
+  --global \
+  --protocol HTTP \
+  --port-name http \
+  --health-checks "$HC_NAME" 2>/dev/null || true
+
+gcloud compute backend-services add-backend "$BACKEND" \
+  --instance-group "$IG_NAME" \
+  --instance-group-zone "$ZONE" \
+  --global
+
+gcloud compute url-maps create "$URL_MAP" --default-service "$BACKEND" 2>/dev/null || true
+
 
 # ==== DNS RECORD ====
 echo "Retrieving external IP..."
