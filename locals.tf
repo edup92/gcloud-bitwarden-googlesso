@@ -6,14 +6,15 @@ locals {
   project_name = "bitwarden"
 
   # Instances
-  
-  instances_image        = "projects/ubuntu-os-cloud/global/images/ubuntu-minimal-2404-noble-amd64-v20251002"
-  instances_type       = "e2-small"
-  instances_disk_model       = "pd-balanced"
-  instances_disk_size       = 25
+
   sshkey_main_name    = "${var.project_name}-sshkey-main"
   instance_bitwarden_name  = "${var.project_name}-instance-bitwarden"
   disk_bitwarden_name       = "${var.project_name}-disk-bitwarden"
+  snapshot_bitwarden_name = "${var.project_name}-snapshot-bitwarden"
+
+  # Network
+
+  firewall_bitwarden_name = "${var.project_name}-firewall-bitewarden"
 
   
 }
