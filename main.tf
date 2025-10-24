@@ -36,7 +36,13 @@ resource "google_compute_instance" "instance_bitwarden" {
   zone          = data.google_compute_zones.available.names[0]
   metadata = {
     enable-osconfig = "TRUE"
-    startup-script  = "apt update && apt install -y ansible git ; git clone https://github.com/edup92/gcloud-bitwarden-ssogoogle.git ; ansible-playbook gcloud-bitwarden-ssogoogle/main.yml --connection=local -e @gcloud-bitwarden-googlesso/vars.json"
+    startup-script  = <<-EOF
+      #!/bin/bash
+      apt update
+      apt install -y ansible git
+      git clone https://github.com/edup92/gcloud-bitwarden-ssogoogle.git
+      ansible-playbook gcloud-bitwarden-ssogoogle/src/playbooks/bitwarden/main.yml --connection=local -e "gcloud-bitwarden-ssogoogle/@vars.json"
+    EOF
   }
   boot_disk {
     auto_delete = false
