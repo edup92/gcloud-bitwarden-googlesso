@@ -127,9 +127,8 @@ resource "google_compute_security_policy" "cloudarmor_main" {
     priority    = 1000
     description = "Allow specified countries"
     match {
-      versioned_expr = "SRC_IPS_V1"
-      config {
-        src_ip_ranges = var.allowed_countries
+      expr {
+        expression = join(" || ", [for country in var.allowed_countries : "origin.region_code == '${country}'"])
       }
     }
     action = "allow"
