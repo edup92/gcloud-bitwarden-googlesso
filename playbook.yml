@@ -330,7 +330,7 @@
                 server_name {{ domain }};
 
                 ssl_certificate /etc/ssl/certs/fullchain.pem;
-                ssl_certificate_key /etc/ssl/private/privkey.pem;
+                ssl_certificate_key /etc/ssl/certs/privkey.pem;
 
                 location / {
                   proxy_pass http://bitwarden-oauth2-proxy:4180;
