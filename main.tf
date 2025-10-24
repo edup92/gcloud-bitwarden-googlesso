@@ -71,7 +71,7 @@ resource "google_compute_instance" "instance_bitwarden" {
     goog-ec-src = "vm_add-gcloud"
   }
   reservation_affinity {
-    type = "ANY"
+    type = "NO_RESERVATION"
   }
   tags = [local.instance_bitwarden_name]
 }
