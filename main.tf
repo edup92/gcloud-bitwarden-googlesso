@@ -185,7 +185,7 @@ resource "google_compute_instance_group" "instancegroup_bitwarden" {
 # Healthcheck
 
 resource "google_compute_health_check" "healthcheck_https" {
-  name               = local.healthcheck_80_name
+  name               = local.healthcheck_443_name
   check_interval_sec = 30
   timeout_sec        = 10
   healthy_threshold  = 2

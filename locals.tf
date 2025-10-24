@@ -11,7 +11,7 @@ locals {
   # Network
 
   firewall_bitwarden_name = "${var.project_name}-firewall-main"
-  healthcheck_80_name = "${var.project_name}-healthcheck-80"
+  healthcheck_443_name = "${var.project_name}-healthcheck-https"
   backend_bitwarden_name = "${var.project_name}-backend-main" 
   cloudarmor_bitwarden_name = "${var.project_name}-cloudarmor-main"
   urlmap_bitwarden_name = "${var.project_name}-urlmap-main"
