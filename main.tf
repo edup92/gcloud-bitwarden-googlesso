@@ -29,6 +29,30 @@ resource "google_compute_project_metadata" "metadata_keypair" {
 
 # Instance
 
+resource "local_file" "file_startup" {
+  filename        = "${path.module}/build/startup.sh"
+  file_permission = "0755"
+  content = templatefile("${path.module}/scripts/startup.sh.tpl", {
+    project_name        = var.project_name
+    gcloud_project_id   = var.gcloud_project_id
+    gcloud_region       = var.gcloud_region
+    domain              = var.domain
+    managed_zone        = var.managed_zone
+    admin_email         = var.admin_email
+    allowed_countries   = jsonencode(var.allowed_countries)
+    oauth_client_id     = var.oauth_client_id
+    oauth_client_secret = var.oauth_client_secret
+    bw_installation_id  = var.bw_installation_id
+    bw_installation_key = var.bw_installation_key
+    bw_db_password      = var.bw_db_password
+    bw_smtp_host        = var.bw_smtp_host
+    bw_smtp_port        = var.bw_smtp_port
+    bw_smtp_ssl         = var.bw_smtp_ssl
+    bw_smtp_username    = var.bw_smtp_username
+    bw_smtp_password    = var.bw_smtp_password
+  })
+}
+
 resource "google_compute_instance" "instance_bitwarden" {
   name         = local.instance_bitwarden_name
   project      = var.gcloud_project_id
@@ -36,38 +60,7 @@ resource "google_compute_instance" "instance_bitwarden" {
   zone          = data.google_compute_zones.available.names[0]
   metadata = {
     enable-osconfig = "TRUE"
-    startup-script  = <<EOF
-#!/bin/bash
-set -e
-apt-get update -y
-apt-get install -y ansible git curl
-mkdir -p /home/bitwarden
-cd /home/bitwarden
-sudo -u bitwarden git clone https://github.com/edup92/gcloud-bitwarden-googlesso.git
-cat > /home/bitwarden/gcloud-bitwarden-googlesso/vars.json <<'VARS'
-{
-  "project_name": "${var.project_name}",
-  "gcloud_project_id": "${var.gcloud_project_id}",
-  "gcloud_region": "${var.gcloud_region}",
-  "domain": "${var.domain}",
-  "managed_zone": "${var.managed_zone}",
-  "admin_email": "${var.admin_email}",
-  "allowed_countries": ${jsonencode(var.allowed_countries)},
-  "oauth_client_id": "${var.oauth_client_id}",
-  "oauth_client_secret": "${var.oauth_client_secret}",
-  "bw_installation_id": "${var.bw_installation_id}",
-  "bw_installation_key": "${var.bw_installation_key}",
-  "bw_db_password": "${var.bw_db_password}",
-  "bw_smtp_host": "${var.bw_smtp_host}",
-  "bw_smtp_port": ${var.bw_smtp_port},
-  "bw_smtp_ssl": ${var.bw_smtp_ssl},
-  "bw_smtp_username": "${var.bw_smtp_username}",
-  "bw_smtp_password": "${var.bw_smtp_password}"
-}
-VARS
-chown bitwarden:bitwarden /home/bitwarden/gcloud-bitwarden-googlesso/vars.json || true
-ansible-playbook /home/bitwarden/gcloud-bitwarden-googlesso/src/playbooks/bitwarden/main.yml --connection=local -e "/home/bitwarden/gcloud-bitwarden-googlesso/vars.json"
-EOF
+    startup-script  = local_file.file_startup.content
   }
   boot_disk {
     auto_delete = false
