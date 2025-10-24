@@ -46,8 +46,11 @@ resource "google_compute_instance" "instance_bitwarden" {
     }
   }
   network_interface {
-    network_tier = "STANDARD"
-    stack_type   = "IPV4_ONLY"
+    network = "default"
+    access_config {
+      network_tier = "STANDARD"
+    }
+    stack_type = "IPV4_ONLY"
   }
   service_account {
     scopes = ["https://www.googleapis.com/auth/cloud-platform"]
