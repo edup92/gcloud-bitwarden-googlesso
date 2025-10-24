@@ -7,9 +7,6 @@ resource "tls_private_key" "keypair" {
 
 resource "google_secret_manager_secret" "ssh_keypair" {
   secret_id = local.sshkey_main_name
-  replication {
-    automatic = true
-  }
 }
 
 resource "google_secret_manager_secret_version" "ssh_keypair_version" {
@@ -60,11 +57,9 @@ resource "google_compute_instance" "instance_bitwarden" {
     enable_vtpm                 = true
     enable_integrity_monitoring = true
   }
-  maintenance_policy {
-    maintenance_type = "MIGRATE"
-  }
   scheduling {
     provisioning_model = "STANDARD"
+    maintenance_policy = "MIGRATE"
   }
   labels = {
     goog-ec-src = "vm_add-gcloud"
@@ -107,7 +102,7 @@ resource "google_compute_disk_resource_policy_attachment" "disk_policy_attachmen
 resource "google_compute_firewall" "allow_lb_hc" {
   name    = local.firewall_bitwarden_name
   project = var.gcloud_project_id
-  network = local.network_name
+  network = "default"
   direction = "INGRESS"
   priority  = 1000
   allow {
@@ -124,18 +119,23 @@ resource "google_compute_security_policy" "cloudarmor_main" {
   name        = local.cloudarmor_bitwarden_name
   rule {
     priority    = 1000
-    description = "Allow ES"
+    description = "Allow specified countries"
     match {
       expr {
-        expression = "inIpRange(origin.region_code, var.allowed_countries)"
+        expression = "origin.region_code in var.allowed_countries"
       }
     }
     action = "allow"
   }
   rule {
     priority    = 2000
-    description = "Deny others"
-    action      = "deny(403)"
+    description = "Deny all other countries"
+    match {
+      expr {
+        expression = "true"
+      }
+    }
+    action = "deny(403)"
   }
 }
 
@@ -216,7 +216,7 @@ data "google_dns_managed_zone" "zone_main" {
 }
 
 resource "google_dns_record_set" "a_record" {
-  name         = var.dns_name
+  name         = var.domain
   type         = "A"
   ttl          = 300
   managed_zone = data.google_dns_managed_zone.zone_main.name
