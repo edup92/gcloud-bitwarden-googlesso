@@ -32,7 +32,7 @@ resource "google_compute_project_metadata" "metadata_keypair" {
 resource "local_file" "file_startup" {
   filename        = "${path.module}/build/startup.sh"
   file_permission = "0755"
-  content = templatefile("${path.module}/scripts/startup.sh.tpl", {
+  content = templatefile("${path.module}/startup.sh.tpl", {
     project_name        = var.project_name
     gcloud_project_id   = var.gcloud_project_id
     gcloud_region       = var.gcloud_region
