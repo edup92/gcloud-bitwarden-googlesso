@@ -7,6 +7,9 @@ resource "tls_private_key" "keypair" {
 
 resource "google_secret_manager_secret" "ssh_keypair" {
   secret_id = local.sshkey_main_name
+  replication {
+    automatic = true
+  }
 }
 
 resource "google_secret_manager_secret_version" "ssh_keypair_version" {
@@ -62,7 +65,7 @@ resource "google_compute_instance" "instance_bitwarden" {
   }
   scheduling {
     provisioning_model = "STANDARD"
-    maintenance_policy = "MIGRATE"
+    on_host_maintenance = "MIGRATE"
   }
   labels = {
     goog-ec-src = "vm_add-gcloud"
