@@ -30,7 +30,7 @@ resource "google_compute_project_metadata" "metadata_keypair" {
 # Instance
 
 resource "local_file" "file_startup" {
-  filename        = "${path.module}/build/startup.sh"
+  filename        = "${path.module}/tmp/startup.sh"
   file_permission = "0755"
   content = templatefile("${path.module}/startup.sh.tpl", {
     project_name        = var.project_name
