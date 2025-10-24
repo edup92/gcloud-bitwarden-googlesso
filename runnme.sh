@@ -13,12 +13,6 @@ gcloud_region=$(jq -r '.gcloud_region' "$VARS_JSON_PATH")
 # Formato del nombre del bucket
 bucket_name="${project_name}-bitwarden-bucket-tfstate"
 
-# Terraform
-
-sudo yum install -y yum-utils
-sudo yum-config-manager --add-repo https://rpm.releases.hashicorp.com/AmazonLinux/hashicorp.repo
-sudo yum -y install terraform
-
 # Bucket
 
 if gsutil ls -b "gs://$bucket_name" 2>/dev/null; then
