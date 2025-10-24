@@ -31,11 +31,11 @@ cat > gcloud-bitwarden-googlesso/vars.json <<EOF
   "bw_installation_id": "XXXX-XXXX-XXXX",
   "bw_installation_key": "YYYYYYYYYYYYYYYY",
   "bw_db_password": "demo",
-  "bw_smtp__host": "demo",
-  "bw_smtp__port": 587,
-  "bw_smtp__ssl": true,
-  "bw_smtp__username": "demo",
-  "bw_smtp__password": "demo"
+  "bw_smtp_host": "demo",
+  "bw_smtp_port": 587,
+  "bw_smtp_ssl": true,
+  "bw_smtp_username": "demo",
+  "bw_smtp_password": "demo"
 }
 EOF
 ```
