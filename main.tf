@@ -96,9 +96,11 @@ resource "google_compute_resource_policy" "snapshot_policy" {
 
 resource "google_compute_disk_resource_policy_attachment" "disk_policy_attachment" {
   name    = google_compute_resource_policy.snapshot_policy.name
-  disk    = google_compute_instance.instance_bitwarden.boot_disk[0].device_name
+  disk    = google_compute_instance.instance_bitwarden.name
   zone    = data.google_compute_zones.available.names[0]
   project = var.gcloud_project_id
+
+  depends_on = [google_compute_instance.instance_bitwarden]
 }
 
 # Firewall
@@ -125,8 +127,9 @@ resource "google_compute_security_policy" "cloudarmor_main" {
     priority    = 1000
     description = "Allow specified countries"
     match {
-      expr {
-        expression = "origin.region_code in var.allowed_countries"
+      versioned_expr = "SRC_IPS_V1"
+      config {
+        src_ip_ranges = var.allowed_countries
       }
     }
     action = "allow"
