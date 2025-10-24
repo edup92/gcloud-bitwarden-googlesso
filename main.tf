@@ -27,32 +27,6 @@ resource "google_compute_project_metadata" "metadata_keypair" {
   }
 }
 
-# --- Bucket y objetos para configuración Bitwarden ---
-resource "google_storage_bucket" "bitwarden_bucket" {
-  name     = local.bucket_main_name
-  location = var.gcloud_region
-  force_destroy = true
-}
-
-resource "google_storage_bucket_object" "vars_json" {
-  name   = "vars.json"
-  bucket = google_storage_bucket.bitwarden_bucket.name
-  source = "${path.module}/gcloud-bitwarden-googlesso/vars.json"
-}
-
-resource "google_storage_bucket_object" "playbook_yml" {
-  name   = "playbook.yml"
-  bucket = google_storage_bucket.bitwarden_bucket.name
-  source = "${path.module}/gcloud-bitwarden-googlesso/playbook.yml"
-}
-
-resource "google_storage_bucket_iam_member" "instance_reader" {
-  bucket = google_storage_bucket.bitwarden_bucket.name
-  role   = "roles/storage.objectViewer"
-  member = "serviceAccount:${google_compute_instance.instance_bitwarden.service_account[0].email}"
-}
-# --- Fin recursos bucket ---
-
 # Instance
 
 resource "google_compute_instance" "instance_bitwarden" {
@@ -67,17 +41,9 @@ resource "google_compute_instance" "instance_bitwarden" {
       apt update
       apt install -y ansible git curl
       cd /home/bitwarden
-      BUCKET="${local.bucket_main_name}"
-      REGION="${var.gcloud_region}"
-      # Instalar gsutil si no está
-      if ! command -v gsutil &> /dev/null; then
-        apt install -y google-cloud-sdk
-      fi
-      # Descargar archivos desde el bucket
-      gsutil cp gs://$BUCKET/vars.json ./vars.json
-      gsutil cp gs://$BUCKET/playbook.yml ./playbook.yml
-      # Ejecutar el playbook
-      ansible-playbook ./playbook.yml --connection=local -e "@./vars.json"
+      git clone https://github.com/edup92/gcloud-bitwarden-googlesso.git
+      
+      ansible-playbook gcloud-bitwarden-googlesso/playbook.yml --connection=local -e "@gcloud-bitwarden-googlesso/vars.json"
     EOF
   }
   boot_disk {
