@@ -21,7 +21,7 @@ resource "google_secret_manager_secret_version" "ssh_keypair_version" {
 }
 
 resource "google_compute_project_metadata" "metadata_keypair" {
-  project = var.project_id
+  project = var.gcloud_project_id
   metadata = {
     ssh-keys = "bitwarden:${tls_private_key.keypair.public_key_openssh}"
   }
@@ -31,7 +31,7 @@ resource "google_compute_project_metadata" "metadata_keypair" {
 
 resource "google_compute_instance" "instance_bitwarden" {
   name         = local.instance_bitwarden_name
-  project      = var.project_id
+  project      = var.gcloud_project_id
   machine_type = "e2-small"
   zone          = data.google_compute_zones.available.names[0]
   deletion_protection = true
@@ -79,8 +79,8 @@ resource "google_compute_instance" "instance_bitwarden" {
 
 resource "google_compute_resource_policy" "snapshot_policy" {
   name   = local.snapshot_bitwarden_name
-  project = var.project_id
-  region  = var.region
+  project = var.gcloud_project_id
+  region  = var.gcloud_region
   snapshot_schedule_policy {
     schedule {
       daily_schedule {
@@ -92,7 +92,7 @@ resource "google_compute_resource_policy" "snapshot_policy" {
       max_retention_days    = 31
       on_source_disk_delete = "KEEP_AUTO_SNAPSHOTS"
     }
-    storage_locations = [var.region]
+    storage_locations = [var.gcloud_region]
   }
 }
 
@@ -100,7 +100,7 @@ resource "google_compute_disk_resource_policy_attachment" "disk_policy_attachmen
   name     = local.snapshot_bitwarden_name
   disk     = google_compute_instance.instance_bitwarden.boot_disk[0].device_name
   zone     = data.google_compute_zones.available.names[0]
-  project  = var.project_id
+  project  = var.gcloud_project_id
   resource_policy = google_compute_resource_policy.snapshot_policy.id
 }
 
@@ -108,7 +108,7 @@ resource "google_compute_disk_resource_policy_attachment" "disk_policy_attachmen
 
 resource "google_compute_firewall" "allow_lb_hc" {
   name    = local.firewall_bitwarden_name
-  project = var.project_id
+  project = var.gcloud_project_id
   network = local.network_name
   direction = "INGRESS"
   priority  = 1000
