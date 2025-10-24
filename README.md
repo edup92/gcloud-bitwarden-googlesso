@@ -45,3 +45,8 @@ EOF
 ```bash
 chmod +x gcloud-bitwarden-googlesso/runnme.sh ; gcloud-bitwarden-googlesso/runnme.sh
 ```
+
+### View status
+```bash
+sudo -u bitwarden bash -c 'cd /opt/bitwarden/bwdata/docker && docker compose ps'
+```
