@@ -134,11 +134,12 @@ resource "google_compute_security_policy" "cloudarmor_main" {
     action = "allow"
   }
   rule {
-    priority    = 2000
-    description = "Deny all other countries"
+    priority    = 2147483647
+    description = "Default deny rule"
     match {
-      expr {
-        expression = "true"
+      versioned_expr = "SRC_IPS_V1"
+      config {
+        src_ip_ranges = ["*"]
       }
     }
     action = "deny(403)"
