@@ -1,4 +1,3 @@
-
 #!/bin/bash
 
 # Vars json
@@ -9,11 +8,10 @@ if [ ! -f "$VARS_JSON_PATH" ]; then
 fi
 
 project_name=$(jq -r '.project_name' "$VARS_JSON_PATH")
-project_environment=$(jq -r '.project_environment' "$VARS_JSON_PATH")
-aws_region=${AWS_REGION}
+gcloud_region=$(jq -r '.gcloud_region' "$VARS_JSON_PATH")
 
 # Formato del nombre del bucket
-bucket_name="${project_name}-bootstrap-${project_environment}-s3-tfstate"
+bucket_name="${project_name}-bitwarden-bucket-tfstate"
 
 # Terraform
 
@@ -23,22 +21,21 @@ sudo yum -y install terraform
 
 # Bucket
 
-if aws s3api head-bucket --bucket "$bucket_name" 2>/dev/null; then
-	echo "Bucket namet $bucket_name already exists."
+if gsutil ls -b "gs://$bucket_name" 2>/dev/null; then
+	echo "Bucket $bucket_name already exists."
 else
-	aws s3api create-bucket --bucket "$bucket_name" --region "$aws_region" --create-bucket-configuration LocationConstraint="$aws_region"
-	aws s3api put-bucket-versioning --bucket "$bucket_name" --versioning-configuration Status=Enabled
-	aws s3api put-bucket-encryption --bucket "$bucket_name" --server-side-encryption-configuration '{"Rules":[{"ApplyServerSideEncryptionByDefault":{"SSEAlgorithm":"AES256"}}]}'
+	gsutil mb -l ${gcloud_region} "gs://$bucket_name"
+	gsutil versioning set on "gs://$bucket_name"
+	gsutil encryption set AES256 "gs://$bucket_name"
 fi
 
 # Generate backend
 
 cat > "$(dirname "$0")/backend.tf" <<EOF
 terraform {
-	backend "s3" {
-		bucket = "$bucket_name"
-		key    = "terraform.tfstate"
-		region = "$aws_region"
+	backend "gcs" {
+		bucket  = "$bucket_name"
+		prefix  = "terraform.tfstate"
 	}
 }
 EOF

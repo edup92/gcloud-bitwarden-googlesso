@@ -104,6 +104,22 @@ resource "google_compute_disk_resource_policy_attachment" "disk_policy_attachmen
   resource_policy = google_compute_resource_policy.snapshot_policy.id
 }
 
+# Firewall
+
+resource "google_compute_firewall" "allow_lb_hc" {
+  name    = local.firewall_bitwarden_name
+  project = var.project_id
+  network = local.network_name
+  direction = "INGRESS"
+  priority  = 1000
+  allow {
+    protocol = "tcp"
+    ports    = ["80", "443"]
+  }
+  source_ranges = ["130.211.0.0/22", "35.191.0.0/16"]
+  target_tags   = [local.instance_bitwarden_name]
+}
+
 # Cloud armor
 
 resource "google_compute_security_policy" "cloudarmor_main" {
@@ -166,19 +182,45 @@ resource "google_compute_url_map" "urlmap_main" {
   default_service = google_compute_backend_service.backend_main.id
 }
 
-# Firewall
+# SSL
 
-resource "google_compute_firewall" "allow_lb_hc" {
-  name    = local.firewall_bitwarden_name
-  project = var.project_id
-  network = local.network_name
-  direction = "INGRESS"
-  priority  = 1000
-  allow {
-    protocol = "tcp"
-    ports    = ["80", "443"]
+resource "google_compute_managed_ssl_certificate" "ssl_main" {
+  name = local.ssl_bitwarden_name
+  managed {
+    domains = [var.domain]
   }
-  source_ranges = ["130.211.0.0/22", "35.191.0.0/16"]
-  target_tags   = [local.instance_bitwarden_name]
 }
 
+# ALB
+
+resource "google_compute_global_address" "lb_ip" {
+  name = local.lbip_bitwarden_name
+}
+
+resource "google_compute_target_https_proxy" "lbtarget_main" {
+  name             = local.lbtarget_bitwarden_name
+  url_map          = google_compute_url_map.urlmap_main.id
+  ssl_certificates = [google_compute_managed_ssl_certificate.ssl_main.id]
+}
+
+resource "google_compute_global_forwarding_rule" "lb_rule" {
+  name                  = local.lbrule_bitwarden_name
+  target                = google_compute_target_https_proxy.lbtarget_main.id
+  port_range            = "443"
+  load_balancing_scheme = "EXTERNAL"
+  ip_address            = google_compute_global_address.lb_ip.address
+}
+
+# DNS
+
+data "google_dns_managed_zone" "zone_main" {
+  name = var.domain
+}
+
+resource "google_dns_record_set" "a_record" {
+  name         = var.dns_name
+  type         = "A"
+  ttl          = 300
+  managed_zone = data.google_dns_managed_zone.zone_main.name
+  rrdatas      = [google_compute_global_address.lb_ip.address]
+}

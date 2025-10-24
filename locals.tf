@@ -1,10 +1,5 @@
 
 locals {
-
-  # Global
-
-  project_name = "bitwarden"
-
   # Instances
 
   sshkey_main_name    = "${var.project_name}-sshkey-main"
@@ -19,16 +14,10 @@ locals {
   healthcheck_80_name = "${var.project_name}-healthcheck-80"
   backend_bitwarden_name = "${var.project_name}-backend-bitwarden" 
   cloudarmor_bitwarden_name = "${var.project_name}-cloudarmor-bitwarden"
-  urlmap_bitwarden_name = "${var.project_name}-urlmap-bitwarden" 
-}
+  urlmap_bitwarden_name = "${var.project_name}-urlmap-bitwarden"
+  lbip_bitwarden_name = "${var.project_name}-lbip-bitwarden"
+  lbtarget_bitwarden_name = "${var.project_name}-lbtarget-bitwarden"
+  lbrule_bitwarden_name = "${var.project_name}-lbrule-bitwarden"
+  ssl_bitwarden_name = "${var.project_name}-ssl-bitwarden" 
 
-NETWORK="default"
-LB_NAME="${INSTANCE_NAME}-lb"
-IG_NAME="${LB_NAME}-ig"
-BACKEND="${LB_NAME}-backend"
-URL_MAP="${LB_NAME}-urlmap"
-SEC_POLICY="${LB_NAME}-policy"
-HC_NAME="${LB_NAME}-hc"
-CERT_NAME="${LB_NAME}-cert"
-PROXY="${LB_NAME}-https-proxy"
-FWD_RULE="${LB_NAME}-https-fwd"
+}

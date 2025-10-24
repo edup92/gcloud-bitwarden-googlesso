@@ -1,3 +1,11 @@
+
+
+variable "project_name" {
+  description = "Project Name"
+  type        = string
+  default     = "bitwarden"
+}
+
 variable "gcloud_project_id" {
   description = "Google Cloud Project ID"
   type        = string
