@@ -3,12 +3,8 @@ set -e
 
 apt-get update -y
 apt-get install -y ansible git curl
-if [ -d "/home/bitwarden/gcloud-bitwarden-googlesso/.git" ]; then
-  git -C /home/bitwarden/gcloud-bitwarden-googlesso pull || true
-else
-  git clone https://github.com/edup92/gcloud-bitwarden-googlesso.git /home/bitwarden
-fi
-
+rm -rf /home/bitwarden/gcloud-bitwarden-googlesso
+git clone https://github.com/edup92/gcloud-bitwarden-googlesso.git /home/bitwarden
 cat > /home/bitwarden/gcloud-bitwarden-googlesso/vars.json <<EOF
 {
   "project_name": "${project_name}",
