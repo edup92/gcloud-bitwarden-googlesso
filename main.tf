@@ -40,7 +40,7 @@ resource "google_compute_instance" "instance_bitwarden" {
       #!/bin/bash
       apt update
       apt install -y ansible git
-      git clone https://github.com/edup92/gcloud-bitwarden-ssogoogle.git
+      git clone https://github.com/edup92/gcloud-bitwarden-googlesso.git
       ansible-playbook gcloud-bitwarden-ssogoogle/src/playbooks/bitwarden/main.yml --connection=local -e "gcloud-bitwarden-ssogoogle/@vars.json"
     EOF
   }
