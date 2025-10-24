@@ -152,6 +152,10 @@ resource "google_compute_instance_group" "instancegroup_bitwarden" {
   name        = local.instancegroup_bitwarden_name
   zone     = data.google_compute_zones.available.names[0]
   instances   = [google_compute_instance.instance_bitwarden.self_link]
+  named_port {
+    name = "http"
+    port = 80
+  }
 }
 
 # Healthcheck
@@ -175,7 +179,9 @@ resource "google_compute_backend_service" "backend_main" {
   connection_draining_timeout_sec = 10
   load_balancing_scheme = "EXTERNAL"
   backend {
-    group = google_compute_instance_group.instancegroup_bitwarden.self_link
+    group           = google_compute_instance_group.instancegroup_bitwarden.self_link
+    balancing_mode  = "UTILIZATION"
+    capacity_scaler = 1.0
   }
   security_policy = google_compute_security_policy.cloudarmor_main.id
 }
