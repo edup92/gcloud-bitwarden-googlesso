@@ -16,8 +16,13 @@ variable "gcloud_region" {
   type        = string
 }
 
+variable "managed_zone" {
+  description = "Cloud DNS Managed Zone"
+  type        = string
+}
+
 variable "domain" {
-  description = "Fully Qualified Domain Name (FQDN) ending with dot"
+  description = "Fully Qualified Domain Name (FQDN) "
   type        = string
 }
 

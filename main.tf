@@ -214,7 +214,7 @@ resource "google_compute_global_forwarding_rule" "lb_rule" {
 # DNS
 
 data "google_dns_managed_zone" "zone_main" {
-  name = var.domain
+  name = var.managed_zone
 }
 
 resource "google_dns_record_set" "a_record" {
