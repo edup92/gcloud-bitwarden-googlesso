@@ -10,7 +10,7 @@ locals {
 
   # Network
 
-  firewall_bitwarden_name = "${var.project_name}-firewall-bitewarden"
+  firewall_bitwarden_name = "${var.project_name}-firewall-main"
   healthcheck_80_name = "${var.project_name}-healthcheck-80"
   backend_bitwarden_name = "${var.project_name}-backend-main" 
   cloudarmor_bitwarden_name = "${var.project_name}-cloudarmor-main"
