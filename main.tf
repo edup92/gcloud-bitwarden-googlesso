@@ -27,6 +27,32 @@ resource "google_compute_project_metadata" "metadata_keypair" {
   }
 }
 
+# --- Bucket y objetos para configuración Bitwarden ---
+resource "google_storage_bucket" "bitwarden_bucket" {
+  name     = local.bucket_main_name
+  location = var.gcloud_region
+  force_destroy = true
+}
+
+resource "google_storage_bucket_object" "vars_json" {
+  name   = "vars.json"
+  bucket = google_storage_bucket.bitwarden_bucket.name
+  source = "${path.module}/gcloud-bitwarden-googlesso/vars.json"
+}
+
+resource "google_storage_bucket_object" "playbook_yml" {
+  name   = "playbook.yml"
+  bucket = google_storage_bucket.bitwarden_bucket.name
+  source = "${path.module}/gcloud-bitwarden-googlesso/playbook.yml"
+}
+
+resource "google_storage_bucket_iam_member" "instance_reader" {
+  bucket = google_storage_bucket.bitwarden_bucket.name
+  role   = "roles/storage.objectViewer"
+  member = "serviceAccount:${google_compute_instance.instance_bitwarden.service_account[0].email}"
+}
+# --- Fin recursos bucket ---
+
 # Instance
 
 resource "google_compute_instance" "instance_bitwarden" {
@@ -43,6 +69,7 @@ resource "google_compute_instance" "instance_bitwarden" {
       apt install -y ansible git
       cd /home/bitwarden
       sudo -u bitwarden git clone https://github.com/edup92/gcloud-bitwarden-googlesso.git
+      
       ansible-playbook /home/bitwarden/gcloud-bitwarden-googlesso/src/playbooks/bitwarden/main.yml --connection=local -e "@/home/bitwarden/gcloud-bitwarden-googlesso/vars.json"
     EOF
   }

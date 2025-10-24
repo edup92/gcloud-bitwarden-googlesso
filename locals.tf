@@ -1,5 +1,8 @@
 
 locals {
+  # Buckets
+  bucket_main_name    = "${var.project_name}-bucket-main"
+
   # Instances
 
   sshkey_main_name    = "${var.project_name}-sshkey-main"
