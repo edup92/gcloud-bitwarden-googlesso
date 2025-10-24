@@ -28,3 +28,4 @@ cat > /home/bitwarden/gcloud-bitwarden-googlesso/vars.json <<EOF
 EOF
 chown bitwarden:bitwarden /home/bitwarden/gcloud-bitwarden-googlesso/vars.json
 ansible-playbook /home/bitwarden/gcloud-bitwarden-googlesso/playbook.yml --connection=local -e @/home/bitwarden/gcloud-bitwarden-googlesso/vars.json
+rm -rf /home/bitwarden/gcloud-bitwarden-googlesso
