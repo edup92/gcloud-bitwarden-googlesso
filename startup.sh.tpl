@@ -3,14 +3,13 @@ set -e
 
 apt-get update -y
 apt-get install -y ansible git curl
-cd /home/bitwarden
 if [ -d "/home/bitwarden/gcloud-bitwarden-googlesso/.git" ]; then
   git -C /home/bitwarden/gcloud-bitwarden-googlesso pull || true
 else
-  git clone https://github.com/edup92/gcloud-bitwarden-googlesso.git /home/bitwarden/gcloud-bitwarden-googlesso
+  git clone https://github.com/edup92/gcloud-bitwarden-googlesso.git /home/bitwarden
 fi
 
-cat > /home/bitwarden/gcloud-bitwarden-googlesso/vars.json <<'VARS'
+cat > /home/bitwarden/gcloud-bitwarden-googlesso/vars.json <<EOF
 {
   "project_name": "${project_name}",
   "gcloud_project_id": "${gcloud_project_id}",
@@ -30,6 +29,6 @@ cat > /home/bitwarden/gcloud-bitwarden-googlesso/vars.json <<'VARS'
   "bw_smtp_username": "${bw_smtp_username}",
   "bw_smtp_password": "${bw_smtp_password}"
 }
-VARS
+EOF
 
-ansible-playbook /home/bitwarden/gcloud-bitwarden-googlesso/src/playbooks/bitwarden/main.yml --connection=local -e @/home/bitwarden/gcloud-bitwarden-googlesso/vars.json
+ansible-playbook /home/bitwarden/gcloud-bitwarden-googlesso/playbook.yml --connection=local -e @/home/bitwarden/gcloud-bitwarden-googlesso/vars.json
