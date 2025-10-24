@@ -80,7 +80,6 @@ resource "google_compute_instance" "instance_bitwarden" {
 resource "google_compute_resource_policy" "snapshot_policy" {
   name   = local.snapshot_bitwarden_name
   project = var.gcloud_project_id
-  region  = var.gcloud_region
   snapshot_schedule_policy {
     schedule {
       daily_schedule {
@@ -92,7 +91,6 @@ resource "google_compute_resource_policy" "snapshot_policy" {
       max_retention_days    = 31
       on_source_disk_delete = "KEEP_AUTO_SNAPSHOTS"
     }
-    storage_locations = [var.gcloud_region]
   }
 }
 
