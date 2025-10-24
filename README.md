@@ -26,14 +26,13 @@ cat > gcloud-bitwarden-googlesso/vars.json <<EOF
   "allowed_countries": [],
   "oauth_client_id": "demo",
   "oauth_client_secret": "demo",
-  "oauth_cookie_secret": "demo",
-  "bw_installation_id": "XXXX-XXXX-XXXX"
-  "bw_installation_key": "YYYYYYYYYYYYYYYY"
-  "bw_db_password": "demo"
-  "bw_smtp__host": "demo"
-  "bw_smtp__port": 587
-  "bw_smtp__ssl": true
-  "bw_smtp__username": "demo"
+  "bw_installation_id": "XXXX-XXXX-XXXX",
+  "bw_installation_key": "YYYYYYYYYYYYYYYY",
+  "bw_db_password": "demo",
+  "bw_smtp__host": "demo",
+  "bw_smtp__port": 587,
+  "bw_smtp__ssl": true,
+  "bw_smtp__username": "demo",
   "bw_smtp__password": "demo"
 }
 EOF
