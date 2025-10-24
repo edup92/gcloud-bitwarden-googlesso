@@ -96,11 +96,10 @@ resource "google_compute_resource_policy" "snapshot_policy" {
 }
 
 resource "google_compute_disk_resource_policy_attachment" "disk_policy_attachment" {
-  name     = local.snapshot_bitwarden_name
-  disk     = google_compute_instance.instance_bitwarden.boot_disk[0].device_name
-  zone     = data.google_compute_zones.available.names[0]
-  project  = var.gcloud_project_id
-  policy = google_compute_resource_policy.snapshot_policy.id
+  name    = google_compute_resource_policy.snapshot_policy.name
+  disk    = google_compute_instance.instance_bitwarden.boot_disk[0].device_name
+  zone    = data.google_compute_zones.available.names[0]
+  project = var.gcloud_project_id
 }
 
 # Firewall
