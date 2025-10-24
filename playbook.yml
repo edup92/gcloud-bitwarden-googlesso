@@ -353,11 +353,11 @@
               globalSettings__identityServer__certificatePassword={{ pfx_password }}
               globalSettings__installation__id={{ bw_installation_id }}
               globalSettings__installation__key={{ bw_installation_key }}
-              globalSettings__mail__smtp__host={{ bw_smtp__host }}
-              globalSettings__mail__smtp__port={{ bw_smtp__port }}
-              globalSettings__mail__smtp__ssl={{ bw_smtp__ssl }}
-              globalSettings__mail__smtp__username={{ bw_smtp__username }}
-              globalSettings__mail__smtp__password={{ bw_smtp__password }}
+              globalSettings__mail__smtp__host={{ bw_smtp_host }}
+              globalSettings__mail__smtp__port={{ bw_smtp_port }}
+              globalSettings__mail__smtp__ssl={{ bw_smtp_ssl }}
+              globalSettings__mail__smtp__username={{ bw_smtp_username }}
+              globalSettings__mail__smtp__password={{ bw_smtp_password }}
               globalSettings__enableUserRegistration=true
             owner: bitwarden
             group: bitwarden
