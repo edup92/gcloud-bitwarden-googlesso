@@ -362,6 +362,28 @@
             owner: bitwarden
             group: bitwarden
             mode: "0600"
+        - name: Generate Oauth Proxy env
+          copy:
+            dest: "/opt/bitwarden/bwdata/env/oauth-proxy.env"
+            content: |
+              OAUTH2_PROXY_PROVIDER=google
+              OAUTH2_PROXY_CLIENT_ID={{ oauth_client_id }}
+              OAUTH2_PROXY_CLIENT_SECRET={{ oauth_client_secret }}
+              OAUTH2_PROXY_COOKIE_SECRET={{ oauth_cookie_secret }}
+              OAUTH2_PROXY_REDIRECT_URL=https://{{ domain }}/oauth2/callback
+              OAUTH2_PROXY_AUTHENTICATED_EMAILS_FILE=/etc/oauth2_proxy/allowed_emails.txt
+              OAUTH2_PROXY_UPSTREAMS=https://bitwarden-nginx:8443
+              OAUTH2_PROXY_SSL_INSECURE_SKIP_VERIFY=true
+              OAUTH2_PROXY_HTTP_ADDRESS=0.0.0.0:4180
+              OAUTH2_PROXY_COOKIE_SECURE=true
+              OAUTH2_PROXY_SET_XAUTHREQUEST=true
+              OAUTH2_PROXY_PASS_USER_HEADERS=true
+              OAUTH2_PROXY_SKIP_PROVIDER_BUTTON=true
+              # salta auth en los paths que usa la app
+              OAUTH2_PROXY_SKIP_AUTH_ROUTES=^/identity/,^/api/
+            owner: bitwarden
+            group: bitwarden
+            mode: "0600"
  
     - name: Docker configurations
       block:
@@ -538,6 +560,8 @@
                   restart: always
                   volumes:
                     - /opt/bitwarden/bwdata/oauth2_proxy/allowed_emails.txt:/etc/oauth2_proxy/allowed_emails.txt:ro
+                  env_file:
+                    - ../env/oauth-proxy.env
                   environment:
                     - OAUTH2_PROXY_PROVIDER=google
                     - OAUTH2_PROXY_CLIENT_ID={{ oauth_client_id }}
