@@ -64,13 +64,20 @@ resource "google_compute_instance" "instance_bitwarden" {
     enable-osconfig = "TRUE"
     startup-script  = <<-EOF
       #!/bin/bash
-      # Actualizar e instalar paquetes
       apt update
-      apt install -y ansible git
+      apt install -y ansible git curl
       cd /home/bitwarden
-      sudo -u bitwarden git clone https://github.com/edup92/gcloud-bitwarden-googlesso.git
-      
-      ansible-playbook /home/bitwarden/gcloud-bitwarden-googlesso/src/playbooks/bitwarden/main.yml --connection=local -e "@/home/bitwarden/gcloud-bitwarden-googlesso/vars.json"
+      BUCKET="${local.bucket_main_name}"
+      REGION="${var.gcloud_region}"
+      # Instalar gsutil si no está
+      if ! command -v gsutil &> /dev/null; then
+        apt install -y google-cloud-sdk
+      fi
+      # Descargar archivos desde el bucket
+      gsutil cp gs://$BUCKET/vars.json ./vars.json
+      gsutil cp gs://$BUCKET/playbook.yml ./playbook.yml
+      # Ejecutar el playbook
+      ansible-playbook ./playbook.yml --connection=local -e "@./vars.json"
     EOF
   }
   boot_disk {
