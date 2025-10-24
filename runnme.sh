@@ -21,7 +21,6 @@ if gsutil ls -b "gs://$bucket_name" 2>/dev/null; then
 else
 	gsutil mb -p "$gcloud_project_id" -l ${gcloud_region} "gs://$bucket_name"
 	gsutil versioning set on "gs://$bucket_name"
-	gsutil encryption set AES256 "gs://$bucket_name"
 fi
 
 # Generate backend
