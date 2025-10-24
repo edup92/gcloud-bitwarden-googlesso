@@ -100,7 +100,7 @@ resource "google_compute_disk_resource_policy_attachment" "disk_policy_attachmen
   disk     = google_compute_instance.instance_bitwarden.boot_disk[0].device_name
   zone     = data.google_compute_zones.available.names[0]
   project  = var.gcloud_project_id
-  resource_policy = google_compute_resource_policy.snapshot_policy.id
+  policy = google_compute_resource_policy.snapshot_policy.id
 }
 
 # Firewall
@@ -176,7 +176,7 @@ resource "google_compute_backend_service" "backend_main" {
   backend {
     group = google_compute_instance_group.instancegroup_bitwarden.self_link
   }
-  security_policy = google_compute_security_policy.allow_spain.id
+  security_policy = google_compute_security_policy.cloudarmor_main.id
 }
 
 # Urlmap
