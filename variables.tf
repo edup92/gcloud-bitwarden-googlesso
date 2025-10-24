@@ -43,12 +43,6 @@ variable "oauth_client_secret" {
   sensitive   = true
 }
 
-variable "oauth_cookie_secret" {
-  description = "Secret key for OAuth cookie encryption"
-  type        = string
-  sensitive   = true
-}
-
 variable "bw_installation_id" {
   description = "Bitwarden installation ID in format XXXX-XXXX-XXXX"
   type        = string
