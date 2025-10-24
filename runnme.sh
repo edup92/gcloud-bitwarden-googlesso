@@ -8,17 +8,18 @@ if [ ! -f "$VARS_JSON_PATH" ]; then
 fi
 
 project_name=$(jq -r '.project_name' "$VARS_JSON_PATH")
+gcloud_project_id=$(jq -r '.gcloud_project_id' "$VARS_JSON_PATH")
 gcloud_region=$(jq -r '.gcloud_region' "$VARS_JSON_PATH")
 
 # Formato del nombre del bucket
-bucket_name="${project_name}-bitwarden-bucket-tfstate"
+bucket_name="${project_name}-bucket-tfstate"
 
 # Bucket
 
 if gsutil ls -b "gs://$bucket_name" 2>/dev/null; then
 	echo "Bucket $bucket_name already exists."
 else
-	gsutil mb -l ${gcloud_region} "gs://$bucket_name"
+	gsutil mb -p "$gcloud_project_id" -l ${gcloud_region} "gs://$bucket_name"
 	gsutil versioning set on "gs://$bucket_name"
 	gsutil encryption set AES256 "gs://$bucket_name"
 fi
