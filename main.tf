@@ -177,19 +177,22 @@ resource "google_compute_instance_group" "instancegroup_bitwarden" {
   zone     = data.google_compute_zones.available.names[0]
   instances   = [google_compute_instance.instance_bitwarden.self_link]
   named_port {
-    name = "http"
-    port = 80
+    name = "https"
+    port = 443
   }
 }
 
 # Healthcheck
 
-resource "google_compute_health_check" "healthcheck_80" {
+resource "google_compute_health_check" "healthcheck_https" {
   name               = local.healthcheck_80_name
   check_interval_sec = 30
   timeout_sec        = 10
-  http_health_check {
-    port = 80
+  healthy_threshold  = 2
+  unhealthy_threshold = 3
+  https_health_check {
+    port = 443
+    request_path = "/alive"
   }
 }
 
@@ -197,17 +200,18 @@ resource "google_compute_health_check" "healthcheck_80" {
 
 resource "google_compute_backend_service" "backend_main" {
   name                  = local.backend_bitwarden_name
-  protocol              = "HTTP"
-  port_name             = "http"
-  health_checks         = [google_compute_health_check.healthcheck_80.id]
+  protocol              = "HTTPS"
+  port_name             = "https"
+  health_checks         = [google_compute_health_check.healthcheck_https.id]
   connection_draining_timeout_sec = 10
   load_balancing_scheme = "EXTERNAL"
+  security_policy = google_compute_security_policy.cloudarmor_main.id
   backend {
     group           = google_compute_instance_group.instancegroup_bitwarden.self_link
     balancing_mode  = "UTILIZATION"
     capacity_scaler = 1.0
   }
-  security_policy = google_compute_security_policy.cloudarmor_main.id
+
 }
 
 # Urlmap
