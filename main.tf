@@ -34,7 +34,6 @@ resource "google_compute_instance" "instance_bitwarden" {
   project      = var.gcloud_project_id
   machine_type = "e2-small"
   zone          = data.google_compute_zones.available.names[0]
-  deletion_protection = true
   metadata = {
     enable-osconfig = "TRUE"
     startup-script  = "apt update && apt install -y ansible git ; git clone https://github.com/edup92/gcloud-bitwarden-ssogoogle.git ; ansible-playbook gcloud-bitwarden-ssogoogle/main.yml --connection=local -e @gcloud-bitwarden-googlesso/vars.json"
