@@ -7,7 +7,7 @@
 
 # Usage instructions
 
-### 1) In google cloud create project and DNS zone. Enable compute, dns, secrets and bucket api
+### 1) In google cloud create project. Enable compute, dns, secrets and bucket api
 
 ### 2) Login in Google Cloud Shell
 
@@ -46,6 +46,8 @@ EOF
 ```bash
 chmod +x gcloud-bitwarden-googlesso/runnme.sh ; gcloud-bitwarden-googlesso/runnme.sh
 ```
+
+### 5) Point the ip to the record in your DNS zone
 
 ### View status
 ```bash
