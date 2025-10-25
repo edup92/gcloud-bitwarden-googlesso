@@ -7,9 +7,11 @@
 
 # Usage instructions
 
-### 1) Login in Google Cloud Shell
+### 1) In google cloud create project and DNS zone. Enable compute, secrets and bucket api
 
-### 2) Clone repository
+### 2) Login in Google Cloud Shell
+
+### 3) Clone repository
 
 ```bash
 git clone https://github.com/edup92/gcloud-bitwarden-googlesso.git
@@ -23,7 +25,7 @@ cat > gcloud-bitwarden-googlesso/vars.json <<EOF
   "gcloud_project_id":"demo",
   "gcloud_region":"demo",
   "domain": "demo.tld",
-  "managed_zone": "demo",
+  "zone_name": "demo",
   "admin_email": "demo",
   "allowed_countries": [],
   "oauth_client_id": "demo",
@@ -40,7 +42,7 @@ cat > gcloud-bitwarden-googlesso/vars.json <<EOF
 EOF
 ```
 
-### 5) Run runme.sh
+### 4) Run runme.sh
 
 ```bash
 chmod +x gcloud-bitwarden-googlesso/runnme.sh ; gcloud-bitwarden-googlesso/runnme.sh
