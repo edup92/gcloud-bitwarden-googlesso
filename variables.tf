@@ -16,6 +16,11 @@ variable "gcloud_region" {
   type        = string
 }
 
+variable "zone_name" {
+  description = "Google Cloud zone name"
+  type        = string
+}
+
 variable "domain" {
   description = "Fully Qualified Domain Name (FQDN) "
   type        = string
