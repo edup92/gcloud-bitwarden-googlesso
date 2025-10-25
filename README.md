@@ -7,7 +7,7 @@
 
 # Usage instructions
 
-### 1) In google cloud create project and DNS zone. Enable compute, secrets and bucket api
+### 1) In google cloud create project and DNS zone. Enable compute, dns, secrets and bucket api
 
 ### 2) Login in Google Cloud Shell
 
@@ -25,7 +25,6 @@ cat > gcloud-bitwarden-googlesso/vars.json <<EOF
   "gcloud_project_id":"demo",
   "gcloud_region":"demo",
   "domain": "demo.tld",
-  "zone_name": "demo",
   "admin_email": "demo",
   "allowed_countries": [],
   "oauth_client_id": "demo",

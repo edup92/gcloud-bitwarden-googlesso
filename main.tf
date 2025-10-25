@@ -249,16 +249,9 @@ resource "google_compute_global_forwarding_rule" "lb_rule" {
   ip_address            = google_compute_global_address.lb_ip.address
 }
 
-# DNS
+# Record
 
-data "google_dns_managed_zone" "zone_main" {
-  name = var.zone_name
-}
-
-resource "google_dns_record_set" "a_record" {
-  name         = "${var.domain}."
-  type         = "A"
-  ttl          = 300
-  managed_zone = data.google_dns_managed_zone.zone_main.name
-  rrdatas      = [google_compute_global_address.lb_ip.address]
+output "bitwarden_lb_ip" {
+  description = "Public IP address of the HTTPS Load Balancer"
+  value       = google_compute_global_address.lb_ip.address
 }
