@@ -29,7 +29,7 @@ cat > "$(dirname "$0")/backend.tf" <<EOF
 terraform {
 	backend "gcs" {
 		bucket  = "$bucket_name"
-		path   = "terraform.tfstate"
+    	prefix = ""
 	}
 }
 EOF
