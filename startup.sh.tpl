@@ -11,7 +11,6 @@ cat > /home/bitwarden/gcloud-bitwarden-googlesso/vars.json <<EOF
   "gcloud_project_id": "${gcloud_project_id}",
   "gcloud_region": "${gcloud_region}",
   "domain": "${domain}",
-  "managed_zone": "${managed_zone}",
   "admin_email": "${admin_email}",
   "allowed_countries": ${allowed_countries},
   "oauth_client_id": "${oauth_client_id}",
