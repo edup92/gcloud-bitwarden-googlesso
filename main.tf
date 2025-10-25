@@ -251,14 +251,15 @@ resource "google_compute_global_forwarding_rule" "lb_rule" {
 
 # DNS
 
-data "google_dns_managed_zone" "zone_main" {
-  name = var.domain
+resource "google_dns_managed_zone" "zone_main" {
+  name        = replace(var.domain, ".", "-") # nombres de zona no permiten puntos
+  dns_name    = "${var.domain}."
 }
 
 resource "google_dns_record_set" "a_record" {
   name         = "${var.domain}."
   type         = "A"
   ttl          = 300
-  managed_zone = data.google_dns_managed_zone.zone_main.name
+  managed_zone = google_dns_managed_zone.zone_main.name
   rrdatas      = [google_compute_global_address.lb_ip.address]
 }
