@@ -12,7 +12,8 @@ gcloud_project_id=$(jq -r '.gcloud_project_id' "$VARS_JSON_PATH")
 gcloud_region=$(jq -r '.gcloud_region' "$VARS_JSON_PATH")
 
 # Formato del nombre del bucket
-bucket_name="${project_name}-bucket-tfstate"
+suffix="$(tr -dc 'a-z0-9' < /dev/urandom | head -c8)"
+bucket_name="${project_name}-bucket-tfstate-${suffix}"
 
 # Bucket
 
