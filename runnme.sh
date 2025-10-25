@@ -12,9 +12,7 @@ gcloud_project_id=$(jq -r '.gcloud_project_id' "$VARS_JSON_PATH")
 gcloud_region=$(jq -r '.gcloud_region' "$VARS_JSON_PATH")
 
 # Formato del nombre del bucket
-suffix="$(tr -dc 'a-z0-9' < /dev/urandom | head -c8)"
-bucket_name="${project_name}-bucket-tfstate-${suffix}"
-bucket_name="bitwarden-bucket-tfstate-3367shu3"
+bucket_name="${project_name}-bucket-tfstate"
 
 # Bucket
 
@@ -31,7 +29,7 @@ cat > "$(dirname "$0")/backend.tf" <<EOF
 terraform {
 	backend "gcs" {
 		bucket  = "$bucket_name"
-		prefix  = "terraform.tfstate"
+		path   = "terraform.tfstate"
 	}
 }
 EOF
