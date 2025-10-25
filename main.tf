@@ -37,7 +37,6 @@ resource "local_file" "file_startup" {
     gcloud_project_id   = var.gcloud_project_id
     gcloud_region       = var.gcloud_region
     domain              = var.domain
-    managed_zone        = var.managed_zone
     admin_email         = var.admin_email
     allowed_countries   = jsonencode(var.allowed_countries)
     oauth_client_id     = var.oauth_client_id
@@ -253,7 +252,7 @@ resource "google_compute_global_forwarding_rule" "lb_rule" {
 # DNS
 
 data "google_dns_managed_zone" "zone_main" {
-  name = var.managed_zone
+  name = var.domain
 }
 
 resource "google_dns_record_set" "a_record" {
