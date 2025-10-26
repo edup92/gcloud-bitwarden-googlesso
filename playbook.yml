@@ -343,11 +343,11 @@
                 }
 
                 location /identity {
-                  proxy_pass https://bitwarden-nginx:8443/alive;
+                  proxy_pass https://bitwarden-nginx:8443/identity;
                 }
 
                 location /api {
-                  proxy_pass https://bitwarden-nginx:8443/alive;
+                  proxy_pass https://bitwarden-nginx:8443/api;
                 }
 
               }
