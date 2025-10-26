@@ -343,11 +343,11 @@
                 }
 
                 location /identity {
-                  proxy_pass http://bitwarden-oauth2-proxy:4180;
+                  proxy_pass https://bitwarden-nginx:8443/alive;
                 }
 
                 location /api {
-                  proxy_pass http://bitwarden-oauth2-proxy:4180;
+                  proxy_pass https://bitwarden-nginx:8443/alive;
                 }
 
               }
@@ -392,6 +392,7 @@
               OAUTH2_PROXY_SET_XAUTHREQUEST=true
               OAUTH2_PROXY_PASS_USER_HEADERS=true
               OAUTH2_PROXY_SKIP_PROVIDER_BUTTON=true
+              #OAUTH2_PROXY_SKIP_AUTH_ROUTES=^/identity/,^/api/
             owner: bitwarden
             group: bitwarden
             mode: "0600"
