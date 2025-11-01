@@ -35,8 +35,8 @@ resource "google_iap_brand" "oauth_brand" {
   support_email     = var.admin_email
 }
 
-resource "google_iap_client" "ouath_client" {
-  brand       = google_iap_brand.oauth_brand.name
+resource "google_iap_client" "oauth_client" {
+  brand       = google_iap_oauth_brand.oauth_brand.name
   display_name = local.ouath_client_name
 }
 
