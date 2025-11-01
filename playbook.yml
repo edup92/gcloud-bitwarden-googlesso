@@ -381,7 +381,7 @@
             content: |
               OAUTH2_PROXY_PROVIDER=google
               OAUTH2_PROXY_CLIENT_ID={{ oauth_client_id }}
-              OAUTH2_PROXY_CLIENT_SECRET={{ oauth_client_secret }}
+              OAUTH2_PROXY_SECRET={{ oauth_secret }}
               OAUTH2_PROXY_COOKIE_SECRET={{ oauth_cookie_secret }}
               OAUTH2_PROXY_REDIRECT_URL=https://{{ domain }}/oauth2/callback
               OAUTH2_PROXY_AUTHENTICATED_EMAILS_FILE=/etc/oauth2_proxy/allowed_emails.txt

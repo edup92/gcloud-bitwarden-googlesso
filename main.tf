@@ -51,7 +51,7 @@ resource "google_secret_manager_secret_version" "secretversion_oauth" {
   secret      = google_secret_manager_secret.secret_oauth.id
   secret_data = jsonencode({
     client_id = google_iap_client.oauth_client.client_id
-    client_secret  = google_iap_client.oauth_client.client_secret
+    secret  = google_iap_client.oauth_client.secret
   })
 }
 
@@ -68,7 +68,7 @@ resource "local_file" "file_startup" {
     admin_email         = var.admin_email
     allowed_countries   = jsonencode(var.allowed_countries)
     oauth_client_id     = google_iap_client.oauth_client.client_id
-    oauth_client_secret = google_iap_client.oauth_client.client_secret
+    oauth_secret = google_iap_client.oauth_client.secret
     bw_installation_id  = var.bw_installation_id
     bw_installation_key = var.bw_installation_key
     bw_db_password      = var.bw_db_password
