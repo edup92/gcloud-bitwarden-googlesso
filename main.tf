@@ -30,7 +30,7 @@ resource "google_compute_project_metadata" "metadata_keypair" {
 
 # Oauth
 
-resource "google_iap_oauth_brand" "oauth_brand" {
+resource "google_iap_brand" "oauth_brand" {
   application_title = local.ouath_brand_name
   support_email     = var.admin_email
 }
