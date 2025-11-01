@@ -14,7 +14,7 @@ cat > /home/bitwarden/gcloud-bitwarden-googlesso/vars.json <<EOF
   "admin_email": "${admin_email}",
   "allowed_countries": ${allowed_countries},
   "oauth_client_id": "${oauth_client_id}",
-  "oauth_client_secret": "${oauth_client_secret}",
+  "oauth_secret": "${oauth_secret}",
   "bw_installation_id": "${bw_installation_id}",
   "bw_installation_key": "${bw_installation_key}",
   "bw_db_password": "${bw_db_password}",
