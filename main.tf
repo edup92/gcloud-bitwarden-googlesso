@@ -36,7 +36,7 @@ resource "google_iap_brand" "oauth_brand" {
 }
 
 resource "google_iap_client" "ouath_client" {
-  brand       = google_iap_oauth_brand.oauth_brand.name
+  brand       = google_iap_brand.oauth_brand.name
   display_name = local.ouath_client_name
 }
 
