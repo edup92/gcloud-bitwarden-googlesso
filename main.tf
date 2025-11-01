@@ -5,15 +5,15 @@ resource "tls_private_key" "keypair" {
   rsa_bits  = 4096
 }
 
-resource "google_secret_manager_secret" "secret_keypair" {
+resource "google_secret_manager_secret" "ssh_keypair" {
   secret_id = local.sshkey_main_name
   replication {
     automatic = true
   }
 }
 
-resource "google_secret_manager_secret_version" "secretversion_keypair" {
-  secret      = google_secret_manager_secret.secret_keypair.id
+resource "google_secret_manager_secret_version" "ssh_keypair_version" {
+  secret      = google_secret_manager_secret.ssh_keypair.id
   secret_data = jsonencode({
     private_key = tls_private_key.keypair.private_key_pem
     public_key  = tls_private_key.keypair.public_key_openssh
@@ -25,34 +25,6 @@ resource "google_compute_project_metadata" "metadata_keypair" {
   metadata = {
     ssh-keys = "bitwarden:${tls_private_key.keypair.public_key_openssh}"
   }
-}
-
-
-# Oauth
-
-resource "google_iap_brand" "oauth_brand" {
-  application_title = local.ouath_brand_name
-  support_email     = var.admin_email
-}
-
-resource "google_iap_client" "oauth_client" {
-  brand       = google_iap_brand.oauth_brand.name
-  display_name = local.ouath_client_name
-}
-
-resource "google_secret_manager_secret" "secret_oauth" {
-  secret_id = local.ouath_client_name
-  replication {
-    automatic = true
-  }
-}
-
-resource "google_secret_manager_secret_version" "secretversion_oauth" {
-  secret      = google_secret_manager_secret.secret_oauth.id
-  secret_data = jsonencode({
-    client_id = google_iap_client.oauth_client.client_id
-    secret  = google_iap_client.oauth_client.secret
-  })
 }
 
 # Instance
@@ -67,8 +39,8 @@ resource "local_file" "file_startup" {
     domain              = var.domain
     admin_email         = var.admin_email
     allowed_countries   = jsonencode(var.allowed_countries)
-    oauth_client_id     = google_iap_client.oauth_client.client_id
-    oauth_secret = google_iap_client.oauth_client.secret
+    oauth_client_id     = var.oauth_client_id
+    oauth_client_secret = var.oauth_client_secret
     bw_installation_id  = var.bw_installation_id
     bw_installation_key = var.bw_installation_key
     bw_db_password      = var.bw_db_password
@@ -277,7 +249,7 @@ resource "google_compute_global_forwarding_rule" "lb_rule" {
   ip_address            = google_compute_global_address.lb_ip.address
 }
 
-# Outputs
+# Record
 
 output "bitwarden_lb_ip" {
   description = "Public IP address of the HTTPS Load Balancer"
