@@ -49,6 +49,8 @@ chmod +x gcloud-bitwarden-googlesso/runnme.sh ; gcloud-bitwarden-googlesso/runnm
 
 ### 5) Point the ip to the record in your DNS zone
 
+### 6) Save SSHKeypair and Ouath Key and secret from Gcloud secrets
+
 ### View status
 ```bash
 sudo -u bitwarden bash -c 'cd /opt/bitwarden/bwdata/docker && docker compose ps'

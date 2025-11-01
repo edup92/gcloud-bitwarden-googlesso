@@ -18,6 +18,10 @@ locals {
   lbip_bitwarden_name = "${var.project_name}-lbip-main"
   lbtarget_bitwarden_name = "${var.project_name}-lbtarget-main"
   lbrule_bitwarden_name = "${var.project_name}-lbrule-main"
-  ssl_bitwarden_name = "${var.project_name}-ssl-main" 
+  ssl_bitwarden_name = "${var.project_name}-ssl-main"
 
+  # Oauth
+
+  ouath_brand_name = "${var.project_name}-brand-main"
+  ouath_client_name = "${var.project_name}-client-main"
 }

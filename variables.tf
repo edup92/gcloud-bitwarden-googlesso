@@ -32,17 +32,6 @@ variable "admin_email" {
   type        = string
 }
 
-variable "oauth_client_id" {
-  description = "OAuth client ID for Google SSO authentication"
-  type        = string
-}
-
-variable "oauth_client_secret" {
-  description = "OAuth client secret for Google SSO authentication"
-  type        = string
-  sensitive   = true
-}
-
 variable "bw_installation_id" {
   description = "Bitwarden installation ID in format XXXX-XXXX-XXXX"
   type        = string
