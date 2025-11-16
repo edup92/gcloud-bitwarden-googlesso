@@ -542,9 +542,9 @@
                   container_name: bitwarden-oauth2-proxy
                   restart: always
                   volumes:
-                    - /opt/bitwarden/bwdata/oauth2_proxy/allowed_emails.txt:/etc/oauth2_proxy/allowed_emails.txt:ro
-                    - ../ssl/fullchain.pem:/etc/ssl/certs/fullchain.pem
-                    - ../ssl/privkey.pem:/etc/ssl/certs/privkey.pem
+                    - ../oauth2_proxy/allowed_emails.txt:/etc/oauth2_proxy/allowed_emails.txt:ro
+                    - ../ssl/fullchain.pem:/ssl/fullchain.pem
+                    - ../ssl/privkey.pem:/ssl/privkey.pem
                   env_file:
                     - ../env/oauth-proxy.env
                   networks:
