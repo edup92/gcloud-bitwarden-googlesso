@@ -1,56 +1,39 @@
 # SSH Key
 
-resource "tls_private_key" "keypair" {
+resource "tls_private_key" "pem_ssh" {
   algorithm = "RSA"
   rsa_bits  = 4096
 }
 
-resource "google_secret_manager_secret" "ssh_keypair" {
-  secret_id = local.sshkey_main_name
+resource "local_file" "file_pem_ssh" {
+  filename        = "/tmp/pem_ssh"
+  content         = tls_private_key.pem_ssh.private_key_pem
+  file_permission = "0600"
+}
+
+resource "google_secret_manager_secret" "secret_pem_github" {
+  secret_id = local.secret_pem_github
   replication {
     automatic = true
   }
 }
 
-resource "google_secret_manager_secret_version" "ssh_keypair_version" {
-  secret      = google_secret_manager_secret.ssh_keypair.id
+resource "google_secret_manager_secret_version" "secretversion_pem_ssh" {
+  secret      = google_secret_manager_secret.secret_pem_ssh.id
   secret_data = jsonencode({
-    private_key = tls_private_key.keypair.private_key_pem
-    public_key  = tls_private_key.keypair.public_key_openssh
+    private_key = tls_private_key.pem_ssh.private_key_pem
+    public_key  = tls_private_key.pem_ssh.public_key_openssh
   })
 }
 
 resource "google_compute_project_metadata" "metadata_keypair" {
   project = var.gcloud_project_id
   metadata = {
-    ssh-keys = "bitwarden:${tls_private_key.keypair.public_key_openssh}"
+    ssh-keys = "bitwarden:${tls_private_key.pem_ssh.public_key_openssh}"
   }
 }
 
 # Instance
-
-resource "local_file" "file_startup" {
-  filename        = "${path.module}/tmp/startup.sh"
-  file_permission = "0755"
-  content = templatefile("${path.module}/startup.sh.tpl", {
-    project_name        = var.project_name
-    gcloud_project_id   = var.gcloud_project_id
-    gcloud_region       = var.gcloud_region
-    domain              = var.domain
-    admin_email         = var.admin_email
-    allowed_countries   = jsonencode(var.allowed_countries)
-    oauth_client_id     = var.oauth_client_id
-    oauth_client_secret = var.oauth_client_secret
-    bw_installation_id  = var.bw_installation_id
-    bw_installation_key = var.bw_installation_key
-    bw_db_password      = var.bw_db_password
-    bw_smtp_host        = var.bw_smtp_host
-    bw_smtp_port        = var.bw_smtp_port
-    bw_smtp_ssl         = var.bw_smtp_ssl
-    bw_smtp_username    = var.bw_smtp_username
-    bw_smtp_password    = var.bw_smtp_password
-  })
-}
 
 resource "google_compute_instance" "instance_bitwarden" {
   name         = local.instance_bitwarden_name
@@ -59,7 +42,6 @@ resource "google_compute_instance" "instance_bitwarden" {
   zone          = data.google_compute_zones.available.names[0]
   metadata = {
     enable-osconfig = "TRUE"
-    startup-script  = local_file.file_startup.content
   }
   boot_disk {
     auto_delete = false
@@ -128,8 +110,22 @@ resource "google_compute_disk_resource_policy_attachment" "disk_policy_attachmen
 
 # Firewall
 
-resource "google_compute_firewall" "allow_lb_hc" {
-  name    = local.firewall_bitwarden_name
+resource "google_compute_firewall" "fw_localssh" {
+  name    = local.firewall_localssh_name
+  project = var.gcloud_project_id
+  network = "default"
+  direction = "INGRESS"
+  priority  = 1000
+  allow {
+    protocol = "tcp"
+    ports    = ["22"]
+  }
+  source_ranges = ["35.235.240.0/20"]
+  target_tags   = [google_compute_instance.instance_bitwarden.name]
+}
+
+resource "google_compute_firewall" "fw_lb" {
+  name    = local.firewall_lb_name
   project = var.gcloud_project_id
   network = "default"
   direction = "INGRESS"
@@ -139,7 +135,22 @@ resource "google_compute_firewall" "allow_lb_hc" {
     ports    = ["80", "443"]
   }
   source_ranges = ["130.211.0.0/22", "35.191.0.0/16"]
-  target_tags   = [local.instance_bitwarden_name]
+  target_tags   = [google_compute_instance.instance_bitwarden.name]
+}
+
+resource "google_compute_firewall" "allow_temp_ssh" {
+  name    = local.firewall_tempssh_name
+  project = var.gcloud_project_id
+  network = "default"
+  direction = "INGRESS"
+  priority  = 1000
+  allow {
+    protocol = "tcp"
+    ports    = ["22"]
+  }
+  source_ranges = ["0.0.0.0/0"]
+  target_tags   = [google_compute_instance.instance_bitwarden.name]
+  disabled = true
 }
 
 # Cloud armor
@@ -247,6 +258,40 @@ resource "google_compute_global_forwarding_rule" "lb_rule" {
   port_range            = "443"
   load_balancing_scheme = "EXTERNAL"
   ip_address            = google_compute_global_address.lb_ip.address
+}
+
+# Playbook
+
+resource "null_resource" "run_ansible" {
+  depends_on = [
+    google_compute_instance.instance_vscode
+  ]
+  triggers = {
+    playbook_hash = filesha256("${path.module}/playbook.yml")
+  }
+  provisioner "local-exec" {
+    command = <<EOT
+  # Abrir SSH temporalmente
+  gcloud compute firewall-rules update ${local.firewall_tempssh_name} \
+    --project=${var.gcloud_project_id} \
+    --no-disabled
+
+  # Ejecutar Ansible
+  ansible-playbook \
+    -i ${google_compute_instance.instance_vscode.network_interface[0].access_config[0].nat_ip}, \
+    --user ubuntu \
+    --private-key "${local_file.file_pem_ssh.filename}" \
+    --extra-vars "github_pem_path=${local_file.file_pem_github.filename}" \
+    --extra-vars "@${path.module}/vars.json" \
+    --ssh-extra-args="-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null" \
+    playbook.yml
+
+  # Cerrar SSH temporal
+  gcloud compute firewall-rules update ${local.firewall_tempssh_name} \
+    --project=${var.gcloud_project_id} \
+    --disabled
+  EOT
+  }
 }
 
 # Record
