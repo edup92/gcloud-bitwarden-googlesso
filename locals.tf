@@ -18,7 +18,7 @@ locals {
   firewall_tempssh_name = "${var.project_name}-firewall-tempssh"
   healthcheck_443_name = "${var.project_name}-healthcheck-https"
   backend_bitwarden_name = "${var.project_name}-backend-main" 
-  cloudarmor_vscode_name = "${var.project_name}-cloudarmor-main"
+  cloudarmor_bitwarden_name = "${var.project_name}-cloudarmor-main"
   urlmap_vscode_name = "${var.project_name}-urlmap-main"
   lbip_vscode_name = "${var.project_name}-lbip-main"
   lbtarget_vscode_name = "${var.project_name}-lbtarget-main"
