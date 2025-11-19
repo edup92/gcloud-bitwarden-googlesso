@@ -29,7 +29,7 @@ resource "google_secret_manager_secret_version" "secretversion_pem_ssh" {
 resource "google_compute_project_metadata" "metadata_keypair" {
   project = var.gcloud_project_id
   metadata = {
-    ssh-keys = "bitwarden:${tls_private_key.pem_ssh.public_key_openssh}"
+    ssh-keys = "ubuntu:${tls_private_key.pem_ssh.public_key_openssh}"
   }
 }
 
