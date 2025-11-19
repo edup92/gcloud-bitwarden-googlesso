@@ -264,7 +264,7 @@ resource "google_compute_global_forwarding_rule" "lb_rule" {
 
 resource "null_resource" "run_ansible" {
   depends_on = [
-    google_compute_instance.instance_vscode
+    google_compute_instance.instance_bitwarden
   ]
   triggers = {
     playbook_hash = filesha256("${path.module}/playbook.yml")
@@ -278,7 +278,7 @@ resource "null_resource" "run_ansible" {
 
   # Ejecutar Ansible
   ansible-playbook \
-    -i ${google_compute_instance.instance_vscode.network_interface[0].access_config[0].nat_ip}, \
+    -i ${google_compute_instance.instance_bitwarden.network_interface[0].access_config[0].nat_ip}, \
     --user ubuntu \
     --private-key "${local_file.file_pem_ssh.filename}" \
     --extra-vars "@${path.module}/vars.json" \
