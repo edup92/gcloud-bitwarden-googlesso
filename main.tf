@@ -11,8 +11,8 @@ resource "local_file" "file_pem_ssh" {
   file_permission = "0600"
 }
 
-resource "google_secret_manager_secret" "secret_pem_github" {
-  secret_id = local.secret_pem_github
+resource "google_secret_manager_secret" "secret_pem_ssh" {
+  secret_id = local.secret_pem_ssh
   replication {
     automatic = true
   }

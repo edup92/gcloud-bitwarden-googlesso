@@ -2,11 +2,14 @@
 locals {
   # Instances
 
-  sshkey_main_name    = "${var.project_name}-sshkey-main"
   instance_bitwarden_name  = "${var.project_name}-instance-main"
   disk_bitwarden_name       = "${var.project_name}-disk-main"
   snapshot_bitwarden_name = "${var.project_name}-snapshot-main"
   instancegroup_bitwarden_name = "${var.project_name}-instancegroup-main"
+
+  # Secrets
+
+  secret_pem_ssh    = "${var.project_name}-secret-pem-ssh"
 
   # Network
 
