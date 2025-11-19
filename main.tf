@@ -264,7 +264,8 @@ resource "google_compute_global_forwarding_rule" "lb_rule" {
 
 resource "null_resource" "run_ansible" {
   depends_on = [
-    google_compute_instance.instance_bitwarden
+    google_compute_instance.instance_bitwarden,
+    google_compute_firewall.allow_temp_ssh
   ]
   triggers = {
     playbook_hash = filesha256("${path.module}/playbook.yml")
