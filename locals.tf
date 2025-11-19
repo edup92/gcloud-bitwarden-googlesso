@@ -19,11 +19,11 @@ locals {
   healthcheck_443_name = "${var.project_name}-healthcheck-https"
   backend_bitwarden_name = "${var.project_name}-backend-main" 
   cloudarmor_bitwarden_name = "${var.project_name}-cloudarmor-main"
-  urlmap_vscode_name = "${var.project_name}-urlmap-main"
-  lbip_vscode_name = "${var.project_name}-lbip-main"
-  lbtarget_vscode_name = "${var.project_name}-lbtarget-main"
-  lbrule_vscode_name = "${var.project_name}-lbrule-main"
-  ssl_vscode_name = "${var.project_name}-ssl-main"
+  urlmap_bitwarden_name = "${var.project_name}-urlmap-main"
+  lbip_bitwarden_name = "${var.project_name}-lbip-main"
+  lbtarget_bitwarden_name = "${var.project_name}-lbtarget-main"
+  lbrule_bitwarden_name = "${var.project_name}-lbrule-main"
+  ssl_bitwarden_name = "${var.project_name}-ssl-main"
 
   # Oauth
 
