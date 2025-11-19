@@ -281,7 +281,6 @@ resource "null_resource" "run_ansible" {
     -i ${google_compute_instance.instance_vscode.network_interface[0].access_config[0].nat_ip}, \
     --user ubuntu \
     --private-key "${local_file.file_pem_ssh.filename}" \
-    --extra-vars "github_pem_path=${local_file.file_pem_github.filename}" \
     --extra-vars "@${path.module}/vars.json" \
     --ssh-extra-args="-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null" \
     playbook.yml
