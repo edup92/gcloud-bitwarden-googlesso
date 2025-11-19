@@ -43,6 +43,7 @@ resource "google_compute_instance" "instance_bitwarden" {
   metadata = {
     enable-osconfig = "TRUE"
   }
+  allow_stopping_for_update = true
   boot_disk {
     auto_delete = false
     device_name = local.disk_bitwarden_name
