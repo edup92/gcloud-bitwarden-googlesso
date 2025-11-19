@@ -38,7 +38,7 @@ resource "google_compute_project_metadata" "metadata_keypair" {
 resource "google_compute_instance" "instance_bitwarden" {
   name         = local.instance_bitwarden_name
   project      = var.gcloud_project_id
-  machine_type = "e2-small"
+  machine_type = "e2-medium"
   zone          = data.google_compute_zones.available.names[0]
   metadata = {
     enable-osconfig = "TRUE"
