@@ -151,8 +151,8 @@
           copy:
             dest: /opt/bitwarden/bwdata/docker/oauth_cookie_secret.txt
             content: "{{ lookup('pipe', 'openssl rand -base64 48 | tr -dc A-Za-z0-9 | head -c 32') }}"
-            owner: code
-            group: code
+            owner: bitwarden
+            group: bitwarden
             mode: "0600"
             force: no
         - name: Read cookie secret from remote file
