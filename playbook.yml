@@ -368,7 +368,6 @@
               OAUTH2_PROXY_COOKIE_SECURE=true
               OAUTH2_PROXY_PROXY_HEADERS=X-Forwarded-Proto:https
               OAUTH2_PROXY_SKIP_AUTH_ROUTES=^/identity/,^/api/,^/alive
-
             owner: bitwarden
             group: bitwarden
             mode: "0600"
