@@ -194,15 +194,6 @@
             dest: "/opt/bitwarden/bwdata/nginx/bitwarden.conf"
             content: |
               server {
-                listen 8080 default_server;
-                listen [::]:8080 default_server;
-                server_name {{ domain }};
-
-                return 301 https://{{ domain }}$request_uri;
-
-              }
-
-              server {
                 listen 8443 ssl http2;
                 listen [::]:8443 ssl http2;
                 server_name {{ domain }};
