@@ -356,7 +356,6 @@
               OAUTH2_PROXY_COOKIE_SECRET={{ oauth_cookie_secret }}
               OAUTH2_PROXY_REDIRECT_URL=https://{{ domain }}/oauth2/callback
               OAUTH2_PROXY_AUTHENTICATED_EMAILS_FILE=/etc/oauth2_proxy/allowed_emails.txt
-              OAUTH2_PROXY_UPSTREAMS=http://bitwarden-nginx:8080
               OAUTH2_PROXY_COOKIE_DOMAIN={{ domain }}
               OAUTH2_PROXY_TLS_CERT_FILE=/ssl/fullchain.pem
               OAUTH2_PROXY_TLS_KEY_FILE=/ssl/privkey.pem
