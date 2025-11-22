@@ -272,14 +272,42 @@ resource "null_resource" "run_ansible" {
   }
   provisioner "local-exec" {
     command = <<EOT
+  IP=${google_compute_instance.instance_bitwarden.network_interface[0].access_config[0].nat_ip}
+
   # Abrir SSH temporalmente
   gcloud compute firewall-rules update ${local.firewall_tempssh_name} \
     --project=${var.gcloud_project_id} \
     --no-disabled
 
+  echo "Waiting for instance SSH"
+
+  OK=0
+  for i in {1..12}; do   # 12 intentos × 5s = 60s
+    ssh -o BatchMode=yes \
+        -o ConnectTimeout=3 \
+        -o StrictHostKeyChecking=no \
+        -o UserKnownHostsFile=/dev/null \
+        -i "${local_file.file_pem_ssh.filename}" \
+        ubuntu@$IP 'exit' >/dev/null 2>&1 && {
+          echo "SSH disponible"
+          OK=1
+          break
+        }
+    echo "Instance SSH unavailable, retrying"
+    sleep 5
+  done
+
+  if [ "$OK" -ne 1 ]; then
+    echo "ERROR: Instance unaccesible, timeout"
+    gcloud compute firewall-rules update ${local.firewall_tempssh_name} \
+      --project=${var.gcloud_project_id} \
+      --disabled
+    exit 1
+  fi
+
   # Ejecutar Ansible
   ansible-playbook \
-    -i ${google_compute_instance.instance_bitwarden.network_interface[0].access_config[0].nat_ip}, \
+    -i "$IP," \
     --user ubuntu \
     --private-key "${local_file.file_pem_ssh.filename}" \
     --extra-vars "@${path.module}/vars.json" \
