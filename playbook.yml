@@ -361,11 +361,14 @@
               OAUTH2_PROXY_TLS_CERT_FILE=/ssl/fullchain.pem
               OAUTH2_PROXY_TLS_KEY_FILE=/ssl/privkey.pem
               OAUTH2_PROXY_HTTP_ADDRESS=0.0.0.0:443
-              OAUTH2_PROXY_COOKIE_SECURE=true
-              OAUTH2_PROXY_SET_XAUTHREQUEST=true
               OAUTH2_PROXY_PASS_USER_HEADERS=true
+              OAUTH2_PROXY_SET_XAUTHREQUEST=true
               OAUTH2_PROXY_SKIP_PROVIDER_BUTTON=true
+              OAUTH2_PROXY_UPSTREAMS=https://bitwarden-nginx:8443
+              OAUTH2_PROXY_COOKIE_SECURE=true
+              OAUTH2_PROXY_PROXY_HEADERS=X-Forwarded-Proto:https
               OAUTH2_PROXY_SKIP_AUTH_ROUTES=^/identity/,^/api/,^/alive
+
             owner: bitwarden
             group: bitwarden
             mode: "0600"
