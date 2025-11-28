@@ -21,6 +21,11 @@ variable "cf_token" {
   type        = string
 }
 
+variable "cf_accountid" {
+  description = "Cloudflare Account ID"
+  type        = string
+}
+
 variable "domain" {
   description = "Fully Qualified Domain Name (FQDN) "
   type        = string

@@ -322,9 +322,18 @@ resource "null_resource" "run_ansible" {
   }
 }
 
-# Record
+# Cloudflare
 
-output "bitwarden_lb_ip" {
-  description = "Public IP address of the HTTPS Load Balancer"
-  value       = google_compute_global_address.lb_ip.address
+resource "cloudflare_zone" "zone_main" {
+  account_id = var.cf_accountid
+  zone       = var.domain
+}
+
+resource "cloudflare_dns_record" "record_main" {
+  zone_id = cloudflare_zone.zone_main.id
+  name    = var.domain
+  type    = "A"
+  content = google_compute_instance.instance_bitwarden.network_interface[0].access_config[0].nat_ip
+  ttl     = 1
+  proxied = true
 }
