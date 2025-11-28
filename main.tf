@@ -349,15 +349,25 @@ resource "cloudflare_zone_settings_override" "zonesettings_main" {
   }
 }
 
-resource "cloudflare_page_rule" "pagerule_main" {
-  zone_id = cloudflare_zone.zone_main.id
-  target  = "*.${var.dns_domain}/*"
-  priority = 2
-  actions {
-    cache_level     = "bypass"
-    edge_cache_ttl  = 0
+resource "cloudflare_ruleset" "disable_cache" {
+  zone_id = var.zone_id
+  name    = "disable_cache_everything"
+  kind    = "zone"
+  phase   = "http_request_cache_settings"
+  rules {
+    enabled     = true
+    description = "Disable cache for all traffic"
+    expression  = "true"
+    action = "set_cache_settings"
+    action_parameters {
+      cache = false
+      cache_key {
+        cache_deception_armor = false
+      }
+    }
   }
 }
+
 
 resource "cloudflare_filter" "filer_allowcountry" {
   zone_id     = cloudflare_zone.zone_main.id
