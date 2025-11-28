@@ -341,20 +341,34 @@ resource "cloudflare_dns_record" "dnsrecord_main" {
   proxied = true
 }
 
-resource "cloudflare_zone_settings" "zone_ssl" {
+resource "cloudflare_zone_setting" "zone_ssl" {
   zone_id = cloudflare_zone.zone_main.id
-  settings {
-    ssl                      = "full"
-    min_tls_version          = "1.2"
-    automatic_https_rewrites = "on"
-    always_use_https         = "on"
-  }
+  setting = "ssl"
+  value   = "full"
+}
+
+resource "cloudflare_zone_setting" "zone_tls" {
+  zone_id = cloudflare_zone.zone_main.id
+  setting = "min_tls_version"
+  value   = "1.2"
+}
+
+resource "cloudflare_zone_setting" "zone_https" {
+  zone_id = cloudflare_zone.zone_main.id
+  setting = "automatic_https_rewrites"
+  value   = "on"
+}
+
+resource "cloudflare_zone_setting" "zone_always_https" {
+  zone_id = cloudflare_zone.zone_main.id
+  setting = "always_use_https"
+  value   = "on"
 }
 
 resource "cloudflare_page_rule" "pagerule_main" {
   zone_id  = cloudflare_zone.zone_main.id
   target   = "${var.dns_record}/*"
-  actions {
+  actions = {
     cache_level         = "bypass"
     disable_performance = true
     disable_security    = false
@@ -368,14 +382,16 @@ resource "cloudflare_ruleset" "waf_main" {
   description = "Allow/Block traffic based on countries"
   kind        = "zone"
   phase       = "http_request_firewall_custom"
-  rules {
-    action      = "skip"
-    description = "Allow only traffic from allowed countries"
-    expression  = join(" or ", [for country in var.allowed_countries : "(cf.country eq \"${country}\")"])
-  }
-  rules {
-    action      = "block"
-    description = "Block all other countries"
-    expression  = "not (${join(" or", [for country in var.allowed_countries : "(cf.country eq \"${country}\")"])})"
-  }
+  rules = [
+    {
+      action      = "skip"
+      description = "Allow only traffic from allowed countries"
+      expression  = join(" or ", [for country in var.allowed_countries : "(cf.country eq \"${country}\")"])
+    },
+    {
+      action      = "block"
+      description = "Block all other countries"
+      expression  = "not (${join(" or ", [for country in var.allowed_countries : "(cf.country eq \"${country}\")"])})"
+    }
+  ]
 }
