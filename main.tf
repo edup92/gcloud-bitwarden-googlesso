@@ -367,31 +367,36 @@ resource "cloudflare_zone_setting" "zone_always_https" {
   value      = "on"
 }
 
-resource "cloudflare_firewall_rules" "country_rules" {
-  zone_id = cloudflare_zone.zone_main.id
+resource "cloudflare_filter" "country_allow" {
+  zone_id     = cloudflare_zone.zone_main.id
+  description = "Allow specific countries"
+  expression  = join(" or ", [
+    for c in var.allowed_countries : "(ip.geoip.country eq \"${c}\")"
+  ])
+}
 
-  rules = [
-    {
-      description = "Allow allowed countries"
-      action      = "allow"
-      filter      = {
-        expression = join(
-          " or ",
-          [for c in var.allowed_countries : "(ip.geoip.country eq \"${c}\")"]
-        )
-      }
-      enabled = true
-    },
-    {
-      description = "Block all other countries"
-      action      = "block"
-      filter      = {
-        expression = "not (${join(
-          " or ",
-          [for c in var.allowed_countries : "(ip.geoip.country eq \"${c}\")"]
-        )})"
-      }
-      enabled = true
-    }
-  ]
+resource "cloudflare_filter" "country_block" {
+  zone_id     = cloudflare_zone.zone_main.id
+  description = "Block all other countries"
+  expression  = "not (${join(" or ", [
+    for c in var.allowed_countries : "(ip.geoip.country eq \"${c}\")"
+  ])})"
+}
+
+resource "cloudflare_firewall_rule" "allow_countries" {
+  zone_id     = cloudflare_zone.zone_main.id
+  description = "Allow allowed countries"
+  filter_id   = cloudflare_filter.country_allow.id
+  action      = "allow"
+  paused      = false
+  priority    = 1000
+}
+
+resource "cloudflare_firewall_rule" "block_others" {
+  zone_id     = cloudflare_zone.zone_main.id
+  description = "Block all other countries"
+  filter_id   = cloudflare_filter.country_block.id
+  action      = "block"
+  paused      = false
+  priority    = 1100
 }
