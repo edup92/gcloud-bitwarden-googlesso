@@ -48,8 +48,9 @@ jobs:
           project_id: ${{steps.export_vars.outputs.gcloud_project_id}}
       - name: Creates / Checks state bucket (GCS)
         env:
-          BUCKET_NAME: ${{ steps.export_vars.outputs.project_name }}-bucket-state
+          BUCKET_NAME: ${{ steps.export_vars.outputs.project_name }}-bucket-tfstate
           GCP_PROJECT: ${{ steps.export_vars.outputs.gcloud_project_id }}
+          GCP_REGION: ${{ steps.export_vars.outputs.gcloud_region }}
         run: |
           # 1. Check if bucket exists
           if gsutil ls -p "$GCP_PROJECT" "gs://$BUCKET_NAME" >/dev/null 2>&1; then
@@ -57,19 +58,21 @@ jobs:
           else
             echo "Bucket does not exist. Creating: $BUCKET_NAME"
 
-            # 2. Create bucket
-            gsutil mb -p "$GCP_PROJECT" "gs://$BUCKET_NAME"
+            # 2. Create bucket with region
+            echo "Creating bucket in region: $GCP_REGION"
+            gsutil mb -p "$GCP_PROJECT" -l "$GCP_REGION" "gs://$BUCKET_NAME"
 
-            # 3. Block all public access
+            # 3. Block all public access (recommended)
+            echo "Enabling uniform bucket-level access"
             gcloud storage buckets update gs://$BUCKET_NAME --uniform-bucket-level-access
 
-            # 5. Enable versioning
+            # 4. Enable versioning
             echo "Enabling versioning"
             gsutil versioning set on "gs://$BUCKET_NAME"
           fi
       - name: Create TF Backend (jq -> backend.tf.json)
         env:
-          BUCKET_NAME: ${{steps.export_vars.outputs.project_name}}-bucket-state
+          BUCKET_NAME: ${{steps.export_vars.outputs.project_name}}-bucket-tfstate
           AWS_REGION: ${{steps.export_vars.outputs.aws_region}}
         run: |
           tee backend.tf > /dev/null <<EOF
