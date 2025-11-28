@@ -36,7 +36,7 @@ resource "google_compute_project_metadata" "metadata_keypair" {
 # Instance
 
 resource "google_compute_instance" "instance_bitwarden" {
-  name         = local.instance_bitwarden_name
+  name         = local.instance_main_name
   project      = var.gcloud_project_id
   machine_type = "e2-medium"
   zone          = data.google_compute_zones.available.names[0]
@@ -46,7 +46,7 @@ resource "google_compute_instance" "instance_bitwarden" {
   allow_stopping_for_update = true
   boot_disk {
     auto_delete = false
-    device_name = local.disk_bitwarden_name
+    device_name = local.disk_main_name
     initialize_params {
       image = "projects/ubuntu-os-cloud/global/images/ubuntu-minimal-2404-noble-amd64-v20251002"
       size  = 25
@@ -78,13 +78,13 @@ resource "google_compute_instance" "instance_bitwarden" {
   reservation_affinity {
     type = "NO_RESERVATION"
   }
-  tags = [local.instance_bitwarden_name]
+  tags = [local.instance_main_name]
 }
 
 # Snapshot
 
 resource "google_compute_resource_policy" "snapshot_policy" {
-  name   = local.snapshot_bitwarden_name
+  name   = local.snapshot_main_name
   project = var.gcloud_project_id
   snapshot_schedule_policy {
     schedule {
@@ -125,17 +125,17 @@ resource "google_compute_firewall" "fw_localssh" {
   target_tags   = [google_compute_instance.instance_bitwarden.name]
 }
 
-resource "google_compute_firewall" "fw_lb" {
-  name    = local.firewall_lb_name
+resource "google_compute_firewall" "fw_cf" {
+  name    = local.firewall_cf_name
   project = var.gcloud_project_id
   network = "default"
   direction = "INGRESS"
   priority  = 1000
   allow {
     protocol = "tcp"
-    ports    = ["80", "443"]
+    ports    = ["443"]
   }
-  source_ranges = ["130.211.0.0/22", "35.191.0.0/16"]
+  source_ranges = data.cloudflare_ip_ranges.cloudflare.ipv4_cidrs
   target_tags   = [google_compute_instance.instance_bitwarden.name]
 }
 
@@ -152,112 +152,6 @@ resource "google_compute_firewall" "allow_temp_ssh" {
   source_ranges = ["0.0.0.0/0"]
   target_tags   = [google_compute_instance.instance_bitwarden.name]
   disabled = true
-}
-
-# Cloud armor
-
-resource "google_compute_security_policy" "cloudarmor_main" {
-  name        = local.cloudarmor_bitwarden_name
-  rule {
-    priority    = 1000
-    description = "Allow specified countries"
-    match {
-      expr {
-        expression = join(" || ", [for country in var.allowed_countries : "origin.region_code == '${country}'"])
-      }
-    }
-    action = "allow"
-  }
-  rule {
-    priority    = 2147483647
-    description = "Default deny rule"
-    match {
-      versioned_expr = "SRC_IPS_V1"
-      config {
-        src_ip_ranges = ["*"]
-      }
-    }
-    action = "deny(403)"
-  }
-}
-
-# Instancegroup
-
-resource "google_compute_instance_group" "instancegroup_bitwarden" {
-  name        = local.instancegroup_bitwarden_name
-  zone     = data.google_compute_zones.available.names[0]
-  instances   = [google_compute_instance.instance_bitwarden.self_link]
-  named_port {
-    name = "https"
-    port = 443
-  }
-}
-
-# Healthcheck
-
-resource "google_compute_health_check" "healthcheck_https" {
-  name               = local.healthcheck_443_name
-  check_interval_sec = 30
-  timeout_sec        = 10
-  healthy_threshold  = 2
-  unhealthy_threshold = 3
-  tcp_health_check {
-    port = 443
-  }
-}
-
-# Backend Service
-
-resource "google_compute_backend_service" "backend_main" {
-  name                  = local.backend_bitwarden_name
-  protocol              = "HTTPS"
-  port_name             = "https"
-  health_checks         = [google_compute_health_check.healthcheck_https.id]
-  connection_draining_timeout_sec = 10
-  load_balancing_scheme = "EXTERNAL"
-  security_policy = google_compute_security_policy.cloudarmor_main.id
-  backend {
-    group           = google_compute_instance_group.instancegroup_bitwarden.self_link
-    balancing_mode  = "UTILIZATION"
-    capacity_scaler = 1.0
-  }
-
-}
-
-# Urlmap
-
-resource "google_compute_url_map" "urlmap_main" {
-  name            = local.urlmap_bitwarden_name
-  default_service = google_compute_backend_service.backend_main.id
-}
-
-# SSL
-
-resource "google_compute_managed_ssl_certificate" "ssl_main" {
-  name = local.ssl_bitwarden_name
-  managed {
-    domains = [var.dns_record]
-  }
-}
-
-# ALB
-
-resource "google_compute_global_address" "lb_ip" {
-  name = local.lbip_bitwarden_name
-}
-
-resource "google_compute_target_https_proxy" "lbtarget_main" {
-  name             = local.lbtarget_bitwarden_name
-  url_map          = google_compute_url_map.urlmap_main.id
-  ssl_certificates = [google_compute_managed_ssl_certificate.ssl_main.id]
-}
-
-resource "google_compute_global_forwarding_rule" "lb_rule" {
-  name                  = local.lbrule_bitwarden_name
-  target                = google_compute_target_https_proxy.lbtarget_main.id
-  port_range            = "443"
-  load_balancing_scheme = "EXTERNAL"
-  ip_address            = google_compute_global_address.lb_ip.address
 }
 
 # Playbook
