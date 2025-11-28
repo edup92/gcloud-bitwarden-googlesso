@@ -16,6 +16,11 @@ variable "gcloud_region" {
   type        = string
 }
 
+variable "cf_token" {
+  description = "Cloudflare Token"
+  type        = string
+}
+
 variable "domain" {
   description = "Fully Qualified Domain Name (FQDN) "
   type        = string
