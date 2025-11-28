@@ -357,25 +357,13 @@ resource "cloudflare_ruleset" "disable_cache" {
 
   rules {
     enabled     = true
-    description = "Disable cache completely"
+    description = "Disable all cache"
     expression  = "true"
 
-    action = "set_cache_settings"
-
-    action_parameters {
-      cache = "bypass"
-
-      browser_ttl {
-        mode    = "override_origin"
-        default = 1
-      }
-
-      cache_key {
-        cache_deception_armor = false
-      }
-    }
+    action = "disable_cache"
   }
 }
+
 
 
 
