@@ -366,7 +366,8 @@ resource "cloudflare_ruleset" "disable_cache" {
       cache = false
 
       browser_ttl {
-        mode = "bypass"
+        mode    = "override_origin"
+        default = 1
       }
 
       cache_key {
@@ -375,6 +376,7 @@ resource "cloudflare_ruleset" "disable_cache" {
     }
   }
 }
+
 
 resource "cloudflare_filter" "filer_allowcountry" {
   zone_id     = cloudflare_zone.zone_main.id
