@@ -384,21 +384,13 @@ resource "cloudflare_filter" "country_filter_block" {
 resource "cloudflare_firewall_rule" "waf_allow_countries" {
   zone_id     = cloudflare_zone.zone_main.id
   description = "Allow only specified countries"
-  filter {
-    id = cloudflare_filter.country_filter.id
-  }
-  action = {
-    type = "allow"
-  }
+  filter_id   = cloudflare_filter.country_filter.id
+  action      = "allow"
 }
 
 resource "cloudflare_firewall_rule" "waf_block_others" {
   zone_id     = cloudflare_zone.zone_main.id
   description = "Block all other countries"
-  filter {
-    id = cloudflare_filter.country_filter_block.id
-  }
-  action = {
-    type = "block"
-  }
+  filter_id   = cloudflare_filter.country_filter_block.id
+  action      = "block"
 }
