@@ -345,39 +345,46 @@ resource "cloudflare_zone_setting" "zone_ssl" {
   zone_id    = cloudflare_zone.zone_main.id
   setting_id = "ssl"
   value      = "full"
+  lifecycle {
+    prevent_destroy = true
+  }
 }
 
 resource "cloudflare_zone_setting" "zone_tls" {
   zone_id    = cloudflare_zone.zone_main.id
   setting_id = "min_tls_version"
   value      = "1.2"
+  lifecycle {
+    prevent_destroy = true
+  }
 }
 
 resource "cloudflare_zone_setting" "zone_https" {
   zone_id    = cloudflare_zone.zone_main.id
   setting_id = "automatic_https_rewrites"
   value      = "on"
+  lifecycle {
+    prevent_destroy = true
+  }
 }
 
 resource "cloudflare_zone_setting" "zone_always_https" {
   zone_id    = cloudflare_zone.zone_main.id
   setting_id = "always_use_https"
   value      = "on"
-}
-
-resource "cloudflare_page_rule" "pagerule_main" {
-  zone_id  = cloudflare_zone.zone_main.id
-  target   = "${var.dns_record}/*"
-  actions = {
-    cache_level         = "bypass"
-    disable_performance = true
-    disable_security    = false
+  lifecycle {
+    prevent_destroy = true
   }
-  priority = 1
 }
 
-resource "cloudflare_ruleset" "waf_main" {
-  zone_id     = cloudflare_zone.zone_main.id
+# Page rules removed - not supported with account-owned tokens
+# Use Cloudflare cache rules instead if needed
+
+# WAF Ruleset removed - requires zone API token permissions
+# Configure manually in Cloudflare UI or use zone-level API token
+
+/* Removed:
+resource "cloudflare_ruleset" "waf_main" {id
   name        = "WAF Country Firewall"
   description = "Allow/Block traffic based on countries"
   kind        = "zone"
@@ -391,7 +398,8 @@ resource "cloudflare_ruleset" "waf_main" {
     {
       action      = "block"
       description = "Block all other countries"
-      expression  = "not (${join(" or ", [for country in var.allowed_countries : "(cf.country eq \"${country}\")"])})"
+      expression  = "not (${join(" or ", [for country in var.allowed_countries : "(cf.country eq \"${country}\")"]})"
     }
   ]
 }
+*/
