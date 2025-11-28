@@ -47,4 +47,4 @@ jobs:
         with:
           project_id: ${{steps.export_vars.outputs.gcloud_project_id}}
       - name: Test GCP access
-        run: gcloud projects describe ${{ secrets.GCP_PROJECT_ID }}
+        run: gcloud projects describe ${{steps.export_vars.outputs.gcloud_project_id}}
