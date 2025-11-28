@@ -135,7 +135,7 @@ resource "google_compute_firewall" "fw_cf" {
     protocol = "tcp"
     ports    = ["443"]
   }
-  source_ranges = data.cloudflare_ip_ranges.cloudflare.ipv4_cidrs
+  source_ranges = data.cloudflare_ip_ranges.cloudflare.cidrs_ipv4
   target_tags   = [google_compute_instance.instance_bitwarden.name]
 }
 
