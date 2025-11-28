@@ -325,11 +325,8 @@ resource "null_resource" "run_ansible" {
 # Cloudflare
 
 resource "cloudflare_zone" "zone_main" {
-  account = {
-    id = var.cf_accountid
-  }
-  name = var.dns_domain
-  type = "full"
+  account_id = var.cf_accountid
+  zone       = var.dns_domain
 }
 
 resource "cloudflare_dns_record" "dnsrecord_main" {
