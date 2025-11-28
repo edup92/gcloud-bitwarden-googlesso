@@ -26,6 +26,15 @@ gcloud projects add-iam-policy-binding "$PROJECT_ID" \
   --role="$ROLE" \
   --quiet
 
+gcloud projects add-iam-policy-binding "$PROJECT_ID" \
+  --member="serviceAccount:<SA_EMAIL>" \
+  --role="roles/secretmanager.admin"
+
+gcloud projects add-iam-policy-binding "$PROJECT_ID" \
+  --member="serviceAccount:<SA_EMAIL>" \
+  --role="roles/secretmanager.secretAccessor"
+
+
 ### 4. Generate JSON key inline
 echo "[INFO] Generating JSON key (inline output):"
 echo ""
