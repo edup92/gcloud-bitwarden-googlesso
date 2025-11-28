@@ -376,6 +376,6 @@ resource "cloudflare_ruleset" "waf_main" {
   rules {
     action      = "block"
     description = "Block all other countries"
-    expression  = "not (${join(" or ", [for country in var.allowed_countries : "(cf.country eq \"${country}\")"]])})"
+    expression  = "not (${join(" or", [for country in var.allowed_countries : "(cf.country eq \"${country}\")"])})"
   }
 }
