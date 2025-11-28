@@ -387,12 +387,10 @@ resource "cloudflare_ruleset" "country_restrictions" {
       action      = "block"
       description = "Block all other countries"
       enabled     = true
-      expression = "not (" 
-        << join(
-          " or ",
-          [for country in var.allowed_countries : "(cf.country eq \"${country}\")"]
-        ) >> 
-      ")"
+      expression  = "not (${join(
+        " or ",
+        [for country in var.allowed_countries : "(cf.country eq \"${country}\")"]
+      )})"
     }
   ]
 }
