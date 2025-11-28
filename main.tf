@@ -367,3 +367,21 @@ resource "cloudflare_zone_setting" "zone_always_https" {
   value      = "on"
 }
 
+resource "cloudflare_ruleset" "waf_main" {
+  name        = "WAF Country Firewall"
+  description = "Allow/Block traffic based on countries"
+  kind        = "zone"
+  phase       = "http_request_firewall_custom"
+  rules = [
+    {
+      action      = "skip"
+      description = "Allow only traffic from allowed countries"
+      expression  = join(" or ", [for country in var.allowed_countries : "(cf.country eq \"${country}\")"])
+    },
+    {
+      action      = "block"
+      description = "Block all other countries"
+      expression  = "not (${join(" or ", [for country in var.allowed_countries : "(cf.country eq \"${country}\")"]})"
+    }
+  ]
+}
