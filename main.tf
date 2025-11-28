@@ -329,7 +329,7 @@ resource "cloudflare_zone" "zone_main" {
   zone       = var.dns_domain
 }
 
-resource "cloudflare_dnsrecord" "dnsrecord_main" {
+resource "cloudflare_record" "dnsrecord_main" {
   zone_id = cloudflare_zone.zone_main.id
   name    = var.dns_record
   type    = "A"
