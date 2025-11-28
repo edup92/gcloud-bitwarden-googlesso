@@ -31,6 +31,11 @@ variable "domain" {
   type        = string
 }
 
+variable "dnsrecord" {
+  description = "DNS record"
+  type        = string
+}
+
 variable "allowed_countries" {
   description = "List of allowed countries for access control"
   type        = list(string)
