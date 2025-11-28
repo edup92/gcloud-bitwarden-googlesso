@@ -26,12 +26,12 @@ variable "cf_accountid" {
   type        = string
 }
 
-variable "domain" {
+variable "dns_domain" {
   description = "Fully Qualified Domain Name (FQDN) "
   type        = string
 }
 
-variable "dnsrecord" {
+variable "dns_record" {
   description = "DNS record"
   type        = string
 }

@@ -99,7 +99,7 @@
             openssl req -x509 -nodes -days 365 -newkey rsa:2048
             -keyout /opt/bitwarden/bwdata/ssl/privkey.pem
             -out /opt/bitwarden/bwdata/ssl/fullchain.pem
-            -subj "/C=ES/ST=Madrid/L=Madrid/O=Bitwarden/CN={{ dnsrecord }}"
+            -subj "/C=ES/ST=Madrid/L=Madrid/O=Bitwarden/CN={{ dns_record }}"
           args:
             creates: "/opt/bitwarden/bwdata/ssl/fullchain.pem"
         - name: Set SSL files permissions
@@ -196,7 +196,7 @@
               server {
                 listen 8443 ssl http2;
                 listen [::]:8443 ssl http2;
-                server_name {{ dnsrecord }};
+                server_name {{ dns_record }};
 
                 ssl_certificate /etc/ssl/certs/fullchain.pem;
                 ssl_certificate_key /etc/ssl/certs/privkey.pem;
@@ -225,7 +225,7 @@
                   proxy_pass http://web:5000/;
                   include /etc/nginx/security-headers-ssl.conf;
                   include /etc/nginx/security-headers.conf;
-                  add_header Content-Security-Policy "default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://haveibeenpwned.com; child-src 'self' https://*.duosecurity.com https://*.duofederal.com; frame-src 'self' https://*.duosecurity.com https://*.duofederal.com; connect-src 'self' wss://{{ dnsrecord }} https://api.pwnedpasswords.com https://api.2fa.directory; object-src 'self' blob:;";
+                  add_header Content-Security-Policy "default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://haveibeenpwned.com; child-src 'self' https://*.duosecurity.com https://*.duofederal.com; frame-src 'self' https://*.duosecurity.com https://*.duofederal.com; connect-src 'self' wss://{{ dns_record }} https://api.pwnedpasswords.com https://api.2fa.directory; object-src 'self' blob:;";
                   add_header X-Frame-Options SAMEORIGIN;
                   add_header X-Robots-Tag "noindex, nofollow";
                 }
@@ -322,7 +322,7 @@
             content: |
               ASPNETCORE_ENVIRONMENT=Production
               globalSettings__selfHosted=true
-              globalSettings__baseServiceUri__vault=https://{{ dnsrecord }}
+              globalSettings__baseServiceUri__vault=https://{{ dns_record }}
               globalSettings__sqlServer__connectionString=Data Source=tcp:mssql,1433;Initial Catalog=vault;Persist Security Info=False;User ID=sa;Password={{ bw_db_password }};MultipleActiveResultSets=False;Connect Timeout=30;Encrypt=True;TrustServerCertificate=True
               globalSettings__identityServer__certificatePath=/etc/bitwarden/identity/identity.pfx
               globalSettings__identityServer__certificatePassword={{ pfx_password }}
@@ -345,9 +345,9 @@
               OAUTH2_PROXY_CLIENT_ID={{ oauth_client_id }}
               OAUTH2_PROXY_CLIENT_SECRET={{ oauth_client_secret }}
               OAUTH2_PROXY_COOKIE_SECRET={{ oauth_cookie_secret }}
-              OAUTH2_PROXY_REDIRECT_URL=https://{{ dnsrecord }}/oauth2/callback
+              OAUTH2_PROXY_REDIRECT_URL=https://{{ dns_record }}/oauth2/callback
               OAUTH2_PROXY_AUTHENTICATED_EMAILS_FILE=/etc/oauth2_proxy/allowed_emails.txt
-              OAUTH2_PROXY_COOKIE_DOMAIN={{ dnsrecord }}
+              OAUTH2_PROXY_COOKIE_DOMAIN={{ dns_record }}
               OAUTH2_PROXY_TLS_CERT_FILE=/ssl/fullchain.pem
               OAUTH2_PROXY_TLS_KEY_FILE=/ssl/privkey.pem
               OAUTH2_PROXY_HTTP_ADDRESS=0.0.0.0:443

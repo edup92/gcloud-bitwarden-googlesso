@@ -236,7 +236,7 @@ resource "google_compute_url_map" "urlmap_main" {
 resource "google_compute_managed_ssl_certificate" "ssl_main" {
   name = local.ssl_bitwarden_name
   managed {
-    domains = [var.dnsrecord]
+    domains = [var.dns_record]
   }
 }
 
@@ -326,12 +326,12 @@ resource "null_resource" "run_ansible" {
 
 resource "cloudflare_zone" "zone_main" {
   account_id = var.cf_accountid
-  zone       = var.domain
+  zone       = var.dns_domain
 }
 
 resource "cloudflare_dnsrecord" "dnsrecord_main" {
   zone_id = cloudflare_zone.zone_main.id
-  name    = var.dnsrecord
+  name    = var.dns_record
   type    = "A"
   content = google_compute_instance.instance_bitwarden.network_interface[0].access_config[0].nat_ip
   ttl     = 1
@@ -350,7 +350,7 @@ resource "cloudflare_zone_settings_override" "zone_ssl" {
 
 resource "cloudflare_page_rule" "pagerule_main" {
   zone_id = cloudflare_zone.zone_main.id
-  target  = "${var.dnsrecord}/*"
+  target  = "${var.dns_record}/*"
   actions {
     cache_level         = "bypass"
     disable_performance = true
