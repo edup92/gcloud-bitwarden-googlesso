@@ -339,9 +339,8 @@ resource "cloudflare_record" "dnsrecord_main" {
   allow_overwrite = true
 }
 
-resource "cloudflare_zone_settings_override" "zone_settings" {
+resource "cloudflare_zone_settings_override" "zonesettings_main" {
   zone_id = cloudflare_zone.zone_main.id
-
   settings {
     ssl                     = "full"
     min_tls_version         = "1.2"
@@ -350,7 +349,17 @@ resource "cloudflare_zone_settings_override" "zone_settings" {
   }
 }
 
-resource "cloudflare_filter" "country_allow" {
+resource "cloudflare_page_rule" "pagerule_main" {
+  zone_id = cloudflare_zone.zone_main.id
+  target  = "*.${var.dns_domain}/*"
+  priority = 2
+  actions {
+    cache_level     = "bypass"
+    edge_cache_ttl  = 0
+  }
+}
+
+resource "cloudflare_filter" "filer_allowcountry" {
   zone_id     = cloudflare_zone.zone_main.id
   description = "Allow specific countries"
   expression  = join(" or ", [
@@ -358,7 +367,7 @@ resource "cloudflare_filter" "country_allow" {
   ])
 }
 
-resource "cloudflare_filter" "country_block" {
+resource "cloudflare_filter" "filter_denyall" {
   zone_id     = cloudflare_zone.zone_main.id
   description = "Block all other countries"
   expression  = "not (${join(" or ", [
@@ -366,19 +375,19 @@ resource "cloudflare_filter" "country_block" {
   ])})"
 }
 
-resource "cloudflare_firewall_rule" "allow_countries" {
+resource "cloudflare_firewall_rule" "firewall_allowcountry" {
   zone_id     = cloudflare_zone.zone_main.id
   description = "Allow allowed countries"
-  filter_id   = cloudflare_filter.country_allow.id
+  filter_id   = cloudflare_filter.filer_allowcountry.id
   action      = "allow"
   paused      = false
   priority    = 1000
 }
 
-resource "cloudflare_firewall_rule" "block_others" {
+resource "cloudflare_firewall_rule" "firewall_denyall" {
   zone_id     = cloudflare_zone.zone_main.id
   description = "Block all other countries"
-  filter_id   = cloudflare_filter.country_block.id
+  filter_id   = cloudflare_filter.filter_denyall.id
   action      = "block"
   paused      = false
   priority    = 1100
