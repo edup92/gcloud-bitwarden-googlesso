@@ -350,7 +350,7 @@ resource "cloudflare_zone_settings_override" "zonesettings_main" {
 }
 
 resource "cloudflare_ruleset" "disable_cache" {
-  zone_id = var.zone_id
+  zone_id = cloudflare_zone.zone_main.id
   name    = "disable_cache_everything"
   kind    = "zone"
   phase   = "http_request_cache_settings"
