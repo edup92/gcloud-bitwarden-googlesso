@@ -345,46 +345,29 @@ resource "cloudflare_zone_setting" "zone_ssl" {
   zone_id    = cloudflare_zone.zone_main.id
   setting_id = "ssl"
   value      = "full"
-  lifecycle {
-    prevent_destroy = true
-  }
+
 }
 
 resource "cloudflare_zone_setting" "zone_tls" {
   zone_id    = cloudflare_zone.zone_main.id
   setting_id = "min_tls_version"
   value      = "1.2"
-  lifecycle {
-    prevent_destroy = true
-  }
+
 }
 
 resource "cloudflare_zone_setting" "zone_https" {
   zone_id    = cloudflare_zone.zone_main.id
   setting_id = "automatic_https_rewrites"
   value      = "on"
-  lifecycle {
-    prevent_destroy = true
-  }
 }
 
 resource "cloudflare_zone_setting" "zone_always_https" {
   zone_id    = cloudflare_zone.zone_main.id
   setting_id = "always_use_https"
   value      = "on"
-  lifecycle {
-    prevent_destroy = true
-  }
 }
 
-# Page rules removed - not supported with account-owned tokens
-# Use Cloudflare cache rules instead if needed
-
-# WAF Ruleset removed - requires zone API token permissions
-# Configure manually in Cloudflare UI or use zone-level API token
-
-/* Removed:
-resource "cloudflare_ruleset" "waf_main" {id
+resource "cloudflare_ruleset" "waf_main" {
   name        = "WAF Country Firewall"
   description = "Allow/Block traffic based on countries"
   kind        = "zone"
@@ -402,4 +385,3 @@ resource "cloudflare_ruleset" "waf_main" {id
     }
   ]
 }
-*/
