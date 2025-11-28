@@ -340,3 +340,29 @@ resource "cloudflare_dns_record" "dnsrecord_main" {
   ttl     = 1
   proxied = true
 }
+
+resource "cloudflare_zone_setting" "zone_ssl" {
+  zone_id    = cloudflare_zone.zone_main.id
+  setting_id = "ssl"
+  value      = "full"
+
+}
+
+resource "cloudflare_zone_setting" "zone_tls" {
+  zone_id    = cloudflare_zone.zone_main.id
+  setting_id = "min_tls_version"
+  value      = "1.2"
+
+}
+
+resource "cloudflare_zone_setting" "zone_https" {
+  zone_id    = cloudflare_zone.zone_main.id
+  setting_id = "automatic_https_rewrites"
+  value      = "on"
+}
+
+resource "cloudflare_zone_setting" "zone_always_https" {
+  zone_id    = cloudflare_zone.zone_main.id
+  setting_id = "always_use_https"
+  value      = "on"
+}
