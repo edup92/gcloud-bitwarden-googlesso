@@ -373,23 +373,26 @@ resource "cloudflare_ruleset" "country_restrictions" {
   kind    = "zone"
   phase   = "http_request_firewall"
 
-  rule {
-    action      = "skip"
-    description = "Allow specific countries"
-    enabled     = true
-    expression  = join(" or ", [
-      for country in var.allowed_countries :
-      "(cf.country eq \"${country}\")"
-    ])
-  }
-
-  rule {
-    action      = "block"
-    description = "Block all other countries"
-    enabled     = true
-    expression  = "not (${join(" or ", [
-      for country in var.allowed_countries :
-      "(cf.country eq \"${country}\")"
-    ])})"
-  }
+  rules = [
+    {
+      action      = "skip"
+      description = "Allow specific countries"
+      enabled     = true
+      expression  = join(
+        " or ",
+        [for country in var.allowed_countries : "(cf.country eq \"${country}\")"]
+      )
+    },
+    {
+      action      = "block"
+      description = "Block all other countries"
+      enabled     = true
+      expression = "not (" 
+        << join(
+          " or ",
+          [for country in var.allowed_countries : "(cf.country eq \"${country}\")"]
+        ) >> 
+      ")"
+    }
+  ]
 }
