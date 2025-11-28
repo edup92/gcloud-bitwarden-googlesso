@@ -35,7 +35,7 @@ resource "google_compute_project_metadata" "metadata_keypair" {
 
 # Instance
 
-resource "google_compute_instance" "instance_bitwarden" {
+resource "google_compute_instance" "instance_main" {
   name         = local.instance_main_name
   project      = var.gcloud_project_id
   machine_type = "e2-medium"
@@ -102,11 +102,11 @@ resource "google_compute_resource_policy" "snapshot_policy" {
 
 resource "google_compute_disk_resource_policy_attachment" "disk_policy_attachment" {
   name    = google_compute_resource_policy.snapshot_policy.name
-  disk    = google_compute_instance.instance_bitwarden.name
+  disk    = google_compute_instance.instance_main.name
   zone    = data.google_compute_zones.available.names[0]
   project = var.gcloud_project_id
 
-  depends_on = [google_compute_instance.instance_bitwarden]
+  depends_on = [google_compute_instance.instance_main]
 }
 
 # Firewall
@@ -122,7 +122,7 @@ resource "google_compute_firewall" "fw_localssh" {
     ports    = ["22"]
   }
   source_ranges = ["35.235.240.0/20"]
-  target_tags   = [google_compute_instance.instance_bitwarden.name]
+  target_tags   = [google_compute_instance.instance_main.name]
 }
 
 resource "google_compute_firewall" "fw_cf" {
@@ -136,7 +136,7 @@ resource "google_compute_firewall" "fw_cf" {
     ports    = ["443"]
   }
   source_ranges = data.cloudflare_ip_ranges.cloudflare.ipv4_cidr_blocks
-  target_tags   = [google_compute_instance.instance_bitwarden.name]
+  target_tags   = [google_compute_instance.instance_main.name]
 }
 
 resource "google_compute_firewall" "allow_temp_ssh" {
@@ -150,7 +150,7 @@ resource "google_compute_firewall" "allow_temp_ssh" {
     ports    = ["22"]
   }
   source_ranges = ["0.0.0.0/0"]
-  target_tags   = [google_compute_instance.instance_bitwarden.name]
+  target_tags   = [google_compute_instance.instance_main.name]
   disabled = true
 }
 
@@ -158,7 +158,7 @@ resource "google_compute_firewall" "allow_temp_ssh" {
 
 resource "null_resource" "run_ansible" {
   depends_on = [
-    google_compute_instance.instance_bitwarden,
+    google_compute_instance.instance_main,
     google_compute_firewall.allow_temp_ssh
   ]
   triggers = {
@@ -166,7 +166,7 @@ resource "null_resource" "run_ansible" {
   }
   provisioner "local-exec" {
     command = <<EOT
-  IP=${google_compute_instance.instance_bitwarden.network_interface[0].access_config[0].nat_ip}
+  IP=${google_compute_instance.instance_main.network_interface[0].access_config[0].nat_ip}
 
   # Abrir SSH temporalmente
   gcloud compute firewall-rules update ${local.firewall_tempssh_name} \
@@ -227,7 +227,7 @@ resource "cloudflare_record" "dnsrecord_main" {
   zone_id = cloudflare_zone.zone_main.id
   name    = var.dns_record
   type    = "A"
-  value   = google_compute_instance.instance_bitwarden.network_interface[0].access_config[0].nat_ip
+  value   = google_compute_instance.instance_main.network_interface[0].access_config[0].nat_ip
   ttl     = 1
   proxied = true
   allow_overwrite = true
