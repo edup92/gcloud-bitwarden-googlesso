@@ -367,7 +367,7 @@ resource "cloudflare_ruleset" "waf_main" {
   phase       = "http_request_firewall_custom"
 
   rules {
-    action = "allow"
+    action = "skip"
     description = "Allow only traffic from allowed countries"
     expression  = join(" or ", [for country in var.allowed_countries : "(cf.country eq \"${country}\")"])
   }
