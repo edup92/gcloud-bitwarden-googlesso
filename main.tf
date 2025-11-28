@@ -161,10 +161,10 @@ resource "null_resource" "run_ansible" {
     google_compute_instance.instance_main,
     google_compute_firewall.allow_temp_ssh
   ]
-  triggers = [
-    playbook_hash = filesha256("${path.module}/playbook.yml"),
-    google_compute_instance.instance_main,
-  ]
+  triggers = {
+    playbook_hash = filesha256("${path.module}/playbook.yml")
+    instance_id   = google_compute_instance.instance_main.id
+  }
   provisioner "local-exec" {
     command = <<EOT
   IP=${google_compute_instance.instance_main.network_interface[0].access_config[0].nat_ip}
