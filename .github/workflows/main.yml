@@ -66,10 +66,6 @@ jobs:
             # 5. Enable versioning
             echo "Enabling versioning"
             gsutil versioning set on "gs://$BUCKET_NAME"
-
-            # 6. Enable default encryption with Google-managed key
-            echo "Enabling default encryption (Google-managed key)"
-            gsutil encryption -d "gs://$BUCKET_NAME"
           fi
       - name: Create TF Backend (jq -> backend.tf.json)
         env:
