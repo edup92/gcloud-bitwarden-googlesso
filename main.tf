@@ -367,37 +367,31 @@ resource "cloudflare_zone_setting" "zone_always_https" {
   value      = "on"
 }
 
-resource "cloudflare_firewall_rule" "allow_countries" {
-  zone_id     = cloudflare_zone.zone_main.id
-  description = "Allow listed countries"
-  paused      = false
+resource "cloudflare_firewall_rules" "country_rules" {
+  zone_id = cloudflare_zone.zone_main.id
 
-  filter {
-    expression = join(
-      " or ",
-      [for c in var.allowed_countries : "(ip.geoip.country eq \"${c}\")"]
-    )
-  }
-
-  action {
-    mode = "allow"
-  }
+  rules = [
+    {
+      description = "Allow allowed countries"
+      action      = "allow"
+      filter      = {
+        expression = join(
+          " or ",
+          [for c in var.allowed_countries : "(ip.geoip.country eq \"${c}\")"]
+        )
+      }
+      enabled = true
+    },
+    {
+      description = "Block all other countries"
+      action      = "block"
+      filter      = {
+        expression = "not (${join(
+          " or ",
+          [for c in var.allowed_countries : "(ip.geoip.country eq \"${c}\")"]
+        )})"
+      }
+      enabled = true
+    }
+  ]
 }
-
-resource "cloudflare_firewall_rule" "block_others" {
-  zone_id     = cloudflare_zone.zone_main.id
-  description = "Block all other countries"
-  paused      = false
-
-  filter {
-    expression = "not (${join(
-      " or ",
-      [for c in var.allowed_countries : "(ip.geoip.country eq \"${c}\")"]
-    )})"
-  }
-
-  action {
-    mode = "block"
-  }
-}
-
