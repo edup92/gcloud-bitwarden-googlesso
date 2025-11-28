@@ -27,11 +27,11 @@ gcloud projects add-iam-policy-binding "$PROJECT_ID" \
   --quiet
 
 gcloud projects add-iam-policy-binding "$PROJECT_ID" \
-  --member="serviceAccount:<SA_EMAIL>" \
+  --member="serviceAccount:$SA_EMAIL" \
   --role="roles/secretmanager.admin"
 
 gcloud projects add-iam-policy-binding "$PROJECT_ID" \
-  --member="serviceAccount:<SA_EMAIL>" \
+  --member="serviceAccount:$SA_EMAIL" \
   --role="roles/secretmanager.secretAccessor"
 
 

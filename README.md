@@ -5,25 +5,25 @@
 # Paste this json as Github Actions Secret with name VARS_JSON:
 
 {
-  "aws_access_key_id": "",
-  "aws_secret_access_key": "",
-  "aws_region": "eu-south-2",
-  "cf_token": "",
-  "uptimerobot_token": "",
-  "admin_ip": "X.X.X.X/32",
-  "project_name": "",
-  "instance_type": "t4g.small",
-  "instance_disk_type": "gp3",
-  "instance_disk_size": "25",
-  "instance_ami": "ami-0afadb98a5a7f1807",
-  "lambda_runtime": "python3.12",
-  "sites":  {
-    "site1": {
-        "domain": "domain.tld",
-        "monitor_keyworkd": ""
-    }
-    ...
-  }
+  "gcloud_project_id":"",
+  "gcloud_region":"",
+  "cf_token":"",
+  "cf_accountid": "",
+  "project_name": "myproject",
+  "dns_domain": "mydomain.tld",
+  "dns_record": "x.mydomain.tld",
+  "admin_email": "",
+  "allowed_countries": ["ES"],
+  "bw_installation_id": "",
+  "bw_installation_key": "",
+  "bw_db_password": "",
+  "bw_smtp_host": "",
+  "bw_smtp_port": 587,
+  "bw_smtp_ssl": true,
+  "bw_smtp_username": "",
+  "bw_smtp_password": "",
+  "oauth_client_id": "",
+  "oauth_client_secret": ""
 }
 
-# Run playbook
+# Run Github Actions
