@@ -325,47 +325,30 @@ resource "null_resource" "run_ansible" {
 # Cloudflare
 
 resource "cloudflare_zone" "zone_main" {
-  account = {
-    id = var.cf_accountid
-  }
-  name = var.dns_domain
-  type = "full"
+  zone       = var.dns_domain
+  account_id = var.cf_accountid
 }
 
-resource "cloudflare_dns_record" "dnsrecord_main" {
+resource "cloudflare_record" "dnsrecord_main" {
   zone_id = cloudflare_zone.zone_main.id
   name    = var.dns_record
   type    = "A"
-  content = google_compute_instance.instance_bitwarden.network_interface[0].access_config[0].nat_ip
+  value   = google_compute_instance.instance_bitwarden.network_interface[0].access_config[0].nat_ip
   ttl     = 1
   proxied = true
 }
 
-resource "cloudflare_zone_setting" "zone_ssl" {
-  zone_id    = cloudflare_zone.zone_main.id
-  setting_id = "ssl"
-  value      = "full"
+resource "cloudflare_zone_settings_override" "zone_settings" {
+  zone_id = cloudflare_zone.zone_main.id
 
+  settings {
+    ssl                     = "full"
+    min_tls_version         = "1.2"
+    automatic_https_rewrites = "on"
+    always_use_https        = "on"
+  }
 }
 
-resource "cloudflare_zone_setting" "zone_tls" {
-  zone_id    = cloudflare_zone.zone_main.id
-  setting_id = "min_tls_version"
-  value      = "1.2"
-
-}
-
-resource "cloudflare_zone_setting" "zone_https" {
-  zone_id    = cloudflare_zone.zone_main.id
-  setting_id = "automatic_https_rewrites"
-  value      = "on"
-}
-
-resource "cloudflare_zone_setting" "zone_always_https" {
-  zone_id    = cloudflare_zone.zone_main.id
-  setting_id = "always_use_https"
-  value      = "on"
-}
 
 resource "cloudflare_filter" "country_allow" {
   zone_id     = cloudflare_zone.zone_main.id
