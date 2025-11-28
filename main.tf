@@ -377,22 +377,13 @@ resource "cloudflare_ruleset" "ruleset_waf" {
   name    = "country-access-control"
   kind    = "zone"
   phase   = "http_request_firewall_custom"
+
   rules {
     enabled     = true
-    description = "Allow specific countries"
-    expression  = join(" or ", [
-      for c in var.allowed_countries : "(ip.geoip.country eq \"${c}\")"
-    ])
-    action      = "skip"
-    action_parameters {
-      rulesets = ["http_request_firewall_managed"]
-    }
-  }
-  rules {
-    enabled     = true
-    description = "Block all other countries"
+    description = "Block all non-allowed countries"
     expression  = "not (${join(" or ", [
-      for c in var.allowed_countries : "(ip.geoip.country eq \"${c}\")"
+      for c in var.allowed_countries :
+      "(ip.geoip.country eq \"${c}\")"
     ])})"
     action      = "block"
   }
