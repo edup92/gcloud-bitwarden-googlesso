@@ -371,7 +371,7 @@ resource "cloudflare_ruleset" "country_restrictions" {
   zone_id = cloudflare_zone.zone_main.id
   name    = "Country restrictions"
   kind    = "zone"
-  phase   = "http_request_firewall"
+  phase   = "http_request_firewall_custom"
 
   rules = [
     {
