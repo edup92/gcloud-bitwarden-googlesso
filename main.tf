@@ -371,14 +371,13 @@ resource "cloudflare_ruleset" "country_restrictions" {
   zone_id = cloudflare_zone.zone_main.id
   name    = "Country restrictions"
   kind    = "zone"
-  phase   = "http_request_firewall_custom"
+  phase   = "http_request_firewall"
 
   rule {
     action      = "skip"
     description = "Allow specific countries"
     enabled     = true
-
-    expression = join(" or ", [
+    expression  = join(" or ", [
       for country in var.allowed_countries :
       "(cf.country eq \"${country}\")"
     ])
@@ -388,10 +387,9 @@ resource "cloudflare_ruleset" "country_restrictions" {
     action      = "block"
     description = "Block all other countries"
     enabled     = true
-
-    expression = "not (${join(" or ", [
+    expression  = "not (${join(" or ", [
       for country in var.allowed_countries :
-      "(cf.country eq \"${country}\")"]
-    )})"
+      "(cf.country eq \"${country}\")"
+    ])})"
   }
 }
