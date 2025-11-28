@@ -350,17 +350,25 @@ resource "cloudflare_zone_settings_override" "zonesettings_main" {
 }
 
 resource "cloudflare_ruleset" "disable_cache" {
-  zone_id = cloudflare_zone.zone_main.id
+  zone_id = var.zone_id
   name    = "disable_cache_everything"
   kind    = "zone"
   phase   = "http_request_cache_settings"
+
   rules {
     enabled     = true
     description = "Disable cache for all traffic"
     expression  = "true"
+
     action = "set_cache_settings"
     action_parameters {
       cache = false
+
+      browser_ttl {
+        mode = "override"
+        default = 0
+      }
+
       cache_key {
         cache_deception_armor = false
       }
