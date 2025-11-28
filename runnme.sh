@@ -14,24 +14,6 @@ gcloud_region=$(jq -r '.gcloud_region' "$VARS_JSON_PATH")
 # Formato del nombre del bucket
 bucket_name="${project_name}-bucket-tfstate"
 
-# Packages
-
-if ! command -v terraform >/dev/null 2>&1 || \
-   ! command -v ansible >/dev/null 2>&1; then
-
-    sudo apt-get update && sudo apt-get install -y gnupg software-properties-common
-
-    wget -O- https://apt.releases.hashicorp.com/gpg | \
-    gpg --dearmor | \
-    sudo tee /usr/share/keyrings/hashicorp-archive-keyring.gpg > /dev/null
-
-    echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com $(grep -oP '(?<=UBUNTU_CODENAME=).*' /etc/os-release || lsb_release -cs) main" \
-      | sudo tee /etc/apt/sources.list.d/hashicorp.list
-
-    sudo apt update
-    sudo apt install ansible terraform -y
-fi
-
 # Bucket
 
 if gsutil ls -b "gs://$bucket_name" 2>/dev/null; then

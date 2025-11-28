@@ -46,5 +46,28 @@ jobs:
         uses: google-github-actions/setup-gcloud@v2
         with:
           project_id: ${{steps.export_vars.outputs.gcloud_project_id}}
-      - name: Test GCP access
-        run: gcloud projects describe ${{steps.export_vars.outputs.gcloud_project_id}}
+      - name: Creates / Checks state bucket (GCS)
+        env:
+          BUCKET_NAME: ${{ steps.export_vars.outputs.project_name }}-bucket-state
+          GCP_PROJECT: ${{ steps.export_vars.outputs.gcloud_project_id }}
+        run: |
+          # 1. Check if bucket exists
+          if gsutil ls -p "$GCP_PROJECT" "gs://$BUCKET_NAME" >/dev/null 2>&1; then
+            echo "Bucket already exists: $BUCKET_NAME"
+          else
+            echo "Bucket does not exist. Creating: $BUCKET_NAME"
+
+            # 2. Create bucket
+            gsutil mb -p "$GCP_PROJECT" "gs://$BUCKET_NAME"
+
+            # 3. Block all public access
+            gcloud storage buckets update gs://$BUCKET_NAME --uniform-bucket-level-access
+
+            # 5. Enable versioning
+            echo "Enabling versioning"
+            gsutil versioning set on "gs://$BUCKET_NAME"
+
+            # 6. Enable default encryption with Google-managed key
+            echo "Enabling default encryption (Google-managed key)"
+            gsutil encryption -d "gs://$BUCKET_NAME"
+          fi
