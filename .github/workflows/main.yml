@@ -71,3 +71,34 @@ jobs:
             echo "Enabling default encryption (Google-managed key)"
             gsutil encryption -d "gs://$BUCKET_NAME"
           fi
+      - name: Create TF Backend (jq -> backend.tf.json)
+        env:
+          BUCKET_NAME: ${{steps.export_vars.outputs.project_name}}-bucket-state
+          AWS_REGION: ${{steps.export_vars.outputs.aws_region}}
+        run: |
+          tee backend.tf > /dev/null <<EOF
+          terraform {
+            backend "gcs" {
+              bucket = "$BUCKET_NAME"
+              prefix    = ""
+            }
+          }
+          EOF
+          echo "backend.tf created"
+      - name: Terraform init
+        run: terraform init -input=false
+      - name: Terraform plan (using vars.json)
+        run: terraform plan -input=false -no-color -var-file=vars.json -out=tfplan
+      - name: Terraform show
+        run: terraform show -no-color tfplan > plan.txt
+      - name: Await Manual Approval
+        id: approval
+        uses: trstringer/manual-approval@v1
+        with:
+          secret: ${{ secrets.GITHUB_TOKEN }}
+          minimum-approvals: 1
+          approvers: ${{ github.actor }}
+          issue-title: "Manual Approval Required for Terraform Apply"
+          issue-body-file-path: plan.txt
+      - name: Terraform apply
+        run: terraform apply -auto-approve tfplan
