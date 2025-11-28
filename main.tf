@@ -336,6 +336,7 @@ resource "cloudflare_record" "dnsrecord_main" {
   value   = google_compute_instance.instance_bitwarden.network_interface[0].access_config[0].nat_ip
   ttl     = 1
   proxied = true
+  allow_overwrite = true
 }
 
 resource "cloudflare_zone_settings_override" "zone_settings" {
@@ -348,7 +349,6 @@ resource "cloudflare_zone_settings_override" "zone_settings" {
     always_use_https        = "on"
   }
 }
-
 
 resource "cloudflare_filter" "country_allow" {
   zone_id     = cloudflare_zone.zone_main.id
