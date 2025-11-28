@@ -370,31 +370,34 @@ resource "cloudflare_zone_setting" "zone_always_https" {
 resource "cloudflare_firewall_rule" "allow_countries" {
   zone_id     = cloudflare_zone.zone_main.id
   description = "Allow listed countries"
+  paused      = false
 
-  filter      = {
+  filter {
     expression = join(
       " or ",
       [for c in var.allowed_countries : "(ip.geoip.country eq \"${c}\")"]
     )
   }
 
-  action      = "allow"
-  paused      = false
-  priority    = 1000
+  action {
+    mode = "allow"
+  }
 }
 
 resource "cloudflare_firewall_rule" "block_others" {
   zone_id     = cloudflare_zone.zone_main.id
   description = "Block all other countries"
+  paused      = false
 
-  filter      = {
+  filter {
     expression = "not (${join(
       " or ",
       [for c in var.allowed_countries : "(ip.geoip.country eq \"${c}\")"]
     )})"
   }
 
-  action      = "block"
-  paused      = false
-  priority    = 1100
+  action {
+    mode = "block"
+  }
 }
+
