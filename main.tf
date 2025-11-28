@@ -380,39 +380,34 @@ resource "cloudflare_ruleset" "disable_cache" {
   }
 }
 
+resource "cloudflare_ruleset" "country_access" {
+  zone_id = cloudflare_zone.zone_main.id
+  name    = "country-access-control"
+  kind    = "zone"
+  phase   = "http_request_firewall_custom"
 
+  rules {
+    enabled     = true
+    description = "Allow specific countries"
+    # Ejemplo de expresión final:
+    # (ip.geoip.country eq "ES") or (ip.geoip.country eq "FR")
+    expression  = join(" or ", [
+      for c in var.allowed_countries : "(ip.geoip.country eq \"${c}\")"
+    ])
+    action      = "skip"
 
+    action_parameters {
+      rulesets = ["http_request_firewall_managed"]
+    }
+  }
 
-resource "cloudflare_filter" "filer_allowcountry" {
-  zone_id     = cloudflare_zone.zone_main.id
-  description = "Allow specific countries"
-  expression  = join(" or ", [
-    for c in var.allowed_countries : "(ip.geoip.country eq \"${c}\")"
-  ])
-}
-
-resource "cloudflare_filter" "filter_denyall" {
-  zone_id     = cloudflare_zone.zone_main.id
-  description = "Block all other countries"
-  expression  = "not (${join(" or ", [
-    for c in var.allowed_countries : "(ip.geoip.country eq \"${c}\")"
-  ])})"
-}
-
-resource "cloudflare_firewall_rule" "firewall_allowcountry" {
-  zone_id     = cloudflare_zone.zone_main.id
-  description = "Allow allowed countries"
-  filter_id   = cloudflare_filter.filer_allowcountry.id
-  action      = "allow"
-  paused      = false
-  priority    = 1000
-}
-
-resource "cloudflare_firewall_rule" "firewall_denyall" {
-  zone_id     = cloudflare_zone.zone_main.id
-  description = "Block all other countries"
-  filter_id   = cloudflare_filter.filter_denyall.id
-  action      = "block"
-  paused      = false
-  priority    = 1100
+  rules {
+    enabled     = true
+    description = "Block all other countries"
+    # Negación de la anterior
+    expression  = "not (${join(" or ", [
+      for c in var.allowed_countries : "(ip.geoip.country eq \"${c}\")"
+    ])})"
+    action      = "block"
+  }
 }
