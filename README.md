@@ -2,9 +2,10 @@
 
 ## Bitwarden selfhosted in docker containers, with Google SSO Auth, Hosted in Google cloud, DNS and WAF in Cloudflare
 
-# Run bootstrap.sh on Cloudshell
-# Paste json data from bootstrap.sh as Github Actions Secret with name SERVICE_ACCOUNT 
-# Paste this json as Github Actions Secret with name VARS_JSON:
+## Installation
+-  Run bootstrap.sh on Cloudshell
+- Paste json data from bootstrap.sh as Github Actions Secret with name SERVICE_ACCOUNT 
+- Paste this json as Github Actions Secret with name VARS_JSON:
 
 {
   "gcloud_project_id":"",
@@ -28,4 +29,4 @@
   "oauth_client_secret": ""
 }
 
-# Run Github Actions
+- Run Github Actions
