@@ -329,7 +329,7 @@ resource "cloudflare_zone" "zone_main" {
   zone       = var.domain
 }
 
-resource "cloudflare_dns_record" "record_main" {
+resource "cloudflare_record" "record_main" {
   zone_id = cloudflare_zone.zone_main.id
   name    = var.domain
   type    = "A"
@@ -343,7 +343,7 @@ resource "cloudflare_zone_settings_override" "zone_ssl" {
   settings {
     ssl = "full"
     min_tls_version = "1.2"
-    https_redirect = "on"
+    automatic_https_rewrites = "on"
     always_use_https = "on"
   }
 }
