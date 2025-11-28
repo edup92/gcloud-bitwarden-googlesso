@@ -332,6 +332,14 @@ resource "cloudflare_zone" "zone_main" {
   type = "full"
 }
 
+resource "cloudflare_dns_record" "dnsrecord_main" {
+  zone_id = cloudflare_zone.zone_main.id
+  name    = var.dns_record
+  type    = "A"
+  content = google_compute_instance.instance_bitwarden.network_interface[0].access_config[0].nat_ip
+  ttl     = 1
+  proxied = true
+}
 
 resource "cloudflare_zone_setting" "zone_ssl" {
   zone_id    = cloudflare_zone.zone_main.id
