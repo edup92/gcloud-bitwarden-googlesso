@@ -357,10 +357,26 @@ resource "cloudflare_ruleset" "disable_cache" {
 
   rules {
     enabled     = true
-    description = "Disable all cache"
+    description = "Soft disable cache (Terraform-safe)"
     expression  = "true"
 
-    action = "disable_cache"
+    action = "set_cache_settings"
+
+    action_parameters {
+      # Cloudflare NO permite cache = false sin romper la API.
+      # Con cache = true + edge_ttl.bypass_by_default se obtiene bypass real.
+      cache = true
+
+      edge_ttl {
+        mode = "bypass_by_default"
+      }
+
+      browser_ttl {
+        # Obligatorio para que Cloudflare acepte la regla
+        mode    = "override_origin"
+        default = 1
+      }
+    }
   }
 }
 
