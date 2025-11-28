@@ -337,3 +337,50 @@ resource "cloudflare_dns_record" "record_main" {
   ttl     = 1
   proxied = true
 }
+
+resource "cloudflare_zone_settings_override" "zone_ssl" {
+  zone_id = cloudflare_zone.zone_main.id
+  settings {
+    ssl = "full"
+    min_tls_version = "1.2"
+    https_redirect = "on"
+    always_use_https = "on"
+  }
+}
+
+resource "cloudflare_page_rule" "pagerule_main" {
+  zone_id = cloudflare_zone.zone_main.id
+  target  = "${var.domain}/*"
+  actions {
+    cache_level         = "bypass"
+    disable_performance = true
+    disable_security    = false
+  }
+  priority = 1
+}
+
+resource "cloudflare_firewall_rule" "firewall_rule_allow" {
+  zone_id     = cloudflare_zone.zone_main.id
+  description = "Allow only traffic from allowed countries"
+  filter_id   = cloudflare_filter.filter_countries_allow.id
+  action      = "allow"
+}
+
+resource "cloudflare_filter" "filter_countries_allow" {
+  zone_id     = cloudflare_zone.zone_main.id
+  description = "Allowed countries filter"
+  expression  = join(" or ", [for country in var.allowed_countries : "(cf.country eq \"${country}\")"])
+}
+
+resource "cloudflare_firewall_rule" "firewall_rule_block" {
+  zone_id     = cloudflare_zone.zone_main.id
+  description = "Block all other countries"
+  filter_id   = cloudflare_filter.filter_countries_deny.id
+  action      = "block"
+}
+
+resource "cloudflare_filter" "filter_countries_deny" {
+  zone_id     = cloudflare_zone.zone_main.id
+  description = "Block all other countries filter"
+  expression  = "not (${join(" or ", [for country in var.allowed_countries : "(cf.country eq \"${country}\")"])})"
+}
