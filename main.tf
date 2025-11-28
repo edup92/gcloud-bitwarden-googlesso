@@ -368,6 +368,7 @@ resource "cloudflare_zone_setting" "zone_always_https" {
 }
 
 resource "cloudflare_ruleset" "waf_main" {
+  zone_id     = cloudflare_zone.zone_main.id
   name        = "WAF Country Firewall"
   description = "Allow/Block traffic based on countries"
   kind        = "zone"
