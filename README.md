@@ -3,6 +3,7 @@
 ## Bitwarden selfhosted in docker containers, with Google SSO Auth, Hosted in Google cloud, DNS and WAF in Cloudflare
 
 ## Installation
+- Create zone in cloudflare and set DNS Servers
 - Create Account token in cloudflare with permissions:
   - Account - DNS Settings:Edit
   All zones - DNS Settings:Edit, Cache Rules:Edit, Zone WAF:Edit, Zone Settings:Edit, Zone:Edit, SSL and Certificates:Edit, Page Rules:Edit, Firewall Services:Edit, DNS:Edit
