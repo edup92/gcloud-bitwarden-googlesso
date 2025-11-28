@@ -368,30 +368,30 @@ resource "cloudflare_zone_setting" "zone_always_https" {
 }
 
 resource "cloudflare_ruleset" "country_restrictions" {
-  zone_id     = cloudflare_zone.zone_main.id
-  name        = "Country restrictions"
-  kind        = "zone"
-  phase       = "http_request_firewall_custom"
+  zone_id = cloudflare_zone.zone_main.id
+  name    = "Country restrictions"
+  kind    = "zone"
+  phase   = "http_request_firewall_custom"
 
-  rules {
-    action = "skip"
+  rule {
+    action      = "skip"
+    description = "Allow specific countries"
+    enabled     = true
 
     expression = join(" or ", [
       for country in var.allowed_countries :
       "(cf.country eq \"${country}\")"
     ])
-
-    description = "Allow specific countries"
-    enabled     = true
   }
 
-  rules {
+  rule {
     action      = "block"
-    expression  = "not (${join(" or ", [
-      for country in var.allowed_countries :
-      "(cf.country eq \"${country}\")"
-    ])})"
-    description = "Block all others"
+    description = "Block all other countries"
     enabled     = true
+
+    expression = "not (${join(" or ", [
+      for country in var.allowed_countries :
+      "(cf.country eq \"${country}\")"]
+    )})"
   }
 }
