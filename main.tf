@@ -255,14 +255,7 @@ resource "cloudflare_ruleset" "ruleset_cache" {
     expression  = "true"
     action = "set_cache_settings"
     action_parameters {
-      cache = true
-      edge_ttl {
-        mode = "bypass_by_default"
-      }
-      browser_ttl {
-        mode    = "override_origin"
-        default = 1
-      }
+      cache = false
     }
   }
 }
