@@ -367,36 +367,31 @@ resource "cloudflare_zone_setting" "zone_always_https" {
   value      = "on"
 }
 
-# WAF using Firewall Rules (account-level token compatible)
-
-resource "cloudflare_firewall_rule" "waf_allow_countries" {
+resource "cloudflare_ruleset" "country_restrictions" {
   zone_id     = cloudflare_zone.zone_main.id
-  description = "Allow only specified countries"
+  name        = "Country restrictions"
+  kind        = "zone"
+  phase       = "http_request_firewall_custom"
 
-  filter {
-    expression = join(
-      " or ",
-      [for country in var.allowed_countries : "(cf.country eq \"${country}\")"]
-    )
+  rules {
+    action = "skip"
+
+    expression = join(" or ", [
+      for country in var.allowed_countries :
+      "(cf.country eq \"${country}\")"
+    ])
+
+    description = "Allow specific countries"
+    enabled     = true
   }
 
-  action {
-    mode = "allow"
-  }
-}
-
-resource "cloudflare_firewall_rule" "waf_block_others" {
-  zone_id     = cloudflare_zone.zone_main.id
-  description = "Block all other countries"
-
-  filter {
-    expression = "not (${join(
-      " or ",
-      [for country in var.allowed_countries : "(cf.country eq \"${country}\")"]
-    )})"
-  }
-
-  action {
-    mode = "block"
+  rules {
+    action      = "block"
+    expression  = "not (${join(" or ", [
+      for country in var.allowed_countries :
+      "(cf.country eq \"${country}\")"
+    ])})"
+    description = "Block all others"
+    enabled     = true
   }
 }
