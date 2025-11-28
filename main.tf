@@ -357,13 +357,13 @@ resource "cloudflare_ruleset" "disable_cache" {
 
   rules {
     enabled     = true
-    description = "Disable cache for all traffic"
+    description = "Disable cache completely"
     expression  = "true"
 
     action = "set_cache_settings"
 
     action_parameters {
-      cache = false
+      cache = "bypass"
 
       browser_ttl {
         mode    = "override_origin"
@@ -376,6 +376,7 @@ resource "cloudflare_ruleset" "disable_cache" {
     }
   }
 }
+
 
 
 resource "cloudflare_filter" "filer_allowcountry" {
