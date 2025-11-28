@@ -1,4 +1,6 @@
-# hosting-temp
+# Vault
+
+## Bitwarden selfhosted in docker containers, with Google SSO Auth, Hosted in Google cloud, DNS and WAF in Cloudflare
 
 # Run bootstrap.sh on Cloudshell
 # Paste json data from bootstrap.sh as Github Actions Secret with name SERVICE_ACCOUNT 
